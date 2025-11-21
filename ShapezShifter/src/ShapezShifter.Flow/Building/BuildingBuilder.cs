@@ -179,6 +179,9 @@ namespace ShapezShifter.Flow
             where TRenderer : StatelessBuildingSimulationRenderer<TSimulation, TDrawData>
             where TSimulation : ISimulation
             where TDrawData : IBuildingCustomDrawData;
+        
+        IIdentifiableConnectableRenderableBuildingBuilder WithCopiedStaticDrawData(
+            BuildingDefinitionId definitionId);
     }
 
     public interface IIdentifiableConnectableDynamicallyRenderableBuildingBuilder
