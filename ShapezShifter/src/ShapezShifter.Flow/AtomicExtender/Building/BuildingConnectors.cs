@@ -10,11 +10,6 @@ namespace ShapezShifter.Flow.Atomic
             return new SingleTileBuildingConnectorDataBuilder();
         }
 
-        public static ISingleTileSignalConnectorDataBuilder SignalSingleTile()
-        {
-            return new SingleTileBuildingSignalConnectorDataBuilder();
-        }
-
         // public static IMultiTileConnectorDataBuilder MultiTile()
         // {
         //     throw new NotImplementedException();
@@ -68,13 +63,8 @@ namespace ShapezShifter.Flow.Atomic
                 center,
                 tileDimensions);
         }
-    }
-    
-    public class SingleTileBuildingSignalConnectorDataBuilder : ISingleTileSignalConnectorDataBuilder
-    {
-        private readonly List<BuildingBaseIO> BuildingConnectors = new();
-
-        public ISingleTileSignalConnectorDataBuilder AddWireInput(WireConnectorConfig signalInput)
+        
+        public ISingleTileConnectorDataBuilder AddWireInput(WireConnectorConfig signalInput)
         {
             BuildingConnectors.Add(
                 new BuildingSignalInput
@@ -87,7 +77,7 @@ namespace ShapezShifter.Flow.Atomic
         }
 
 
-        public ISingleTileSignalConnectorDataBuilder AddWireOutput(WireConnectorConfig signalOutput)
+        public ISingleTileConnectorDataBuilder AddWireOutput(WireConnectorConfig signalOutput)
         {
             BuildingConnectors.Add(
                 new BuildingSignalInput
@@ -98,40 +88,16 @@ namespace ShapezShifter.Flow.Atomic
                 });
             return this;
         }
-
-        public IBuildingConnectorData Build()
-        {
-            TileVector[] tiles = { TileVector.Zero };
-
-            LocalTileBounds tileBounds = new(TileVector.Zero, TileVector.Zero);
-
-            TileDimensions tileDimensions = tileBounds.Dimensions;
-            LocalVector center = LocalVector.Lerp((LocalVector)tileBounds.Min, (LocalVector)tileBounds.Max, 0.5f);
-
-            return new BuildingConnectorData(
-                BuildingConnectors,
-                tiles,
-                tileBounds,
-                center,
-                tileDimensions);
-        }
     }
 
     public interface ISingleTileConnectorDataBuilder
     {
         ISingleTileConnectorDataBuilder AddShapeInput(ShapeConnectorConfig shapeConnectorConfig);
-
-
         ISingleTileConnectorDataBuilder AddShapeOutput(ShapeConnectorConfig shapeConnectorConfig);
-        IBuildingConnectorData Build();
-    }
-    
-    public interface ISingleTileSignalConnectorDataBuilder
-    {
-        ISingleTileSignalConnectorDataBuilder AddWireInput(WireConnectorConfig signalInput);
 
+        ISingleTileConnectorDataBuilder AddWireInput(WireConnectorConfig signalInput);
+        ISingleTileConnectorDataBuilder AddWireOutput(WireConnectorConfig signalOutput);
 
-        ISingleTileSignalConnectorDataBuilder AddWireOutput(WireConnectorConfig signalOutput);
         IBuildingConnectorData Build();
     }
 
