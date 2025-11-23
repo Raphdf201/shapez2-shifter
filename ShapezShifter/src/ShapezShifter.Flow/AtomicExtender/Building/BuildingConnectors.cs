@@ -80,7 +80,7 @@ namespace ShapezShifter.Flow.Atomic
         public ISingleTileConnectorDataBuilder AddWireOutput(WireConnectorConfig signalOutput)
         {
             BuildingConnectors.Add(
-                new BuildingSignalInput
+                new BuildingSignalOutput
                 {
                     Position_L = TileVector.Zero,
                     _IOType = signalOutput.IoType,
