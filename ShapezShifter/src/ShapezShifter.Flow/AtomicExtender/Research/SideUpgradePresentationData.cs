@@ -15,7 +15,7 @@ namespace ShapezShifter.Flow.Research
         public readonly bool Hidden = false;
         public readonly string Category;
 
-        private SideUpgradePresentationData(ResearchUpgradeId id, string previewImageId, string videoId, IText title,
+        public SideUpgradePresentationData(ResearchUpgradeId id, string previewImageId, string videoId, IText title,
             IText description,
             bool hidden, string category)
         {

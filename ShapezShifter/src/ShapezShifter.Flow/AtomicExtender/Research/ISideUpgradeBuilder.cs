@@ -55,6 +55,11 @@ namespace ShapezShifter.Flow.Atomic
             return this;
         }
 
+        public IPresentableUnlockableSideUpgradeBuilder WithoutCustomRequirements()
+        {
+            return this.WithCustomRequirements(Array.Empty<ResearchMechanicId>(), Array.Empty<ResearchUpgradeId>());
+        }
+
         public IPresentableUnlockableSideUpgradeBuilder WithAdditionalRewards(
             IEnumerable<IResearchReward> additionalRewards)
         {
@@ -70,7 +75,7 @@ namespace ShapezShifter.Flow.Atomic
             if (CopyRequirementsSideUpgradeSelector != null)
             {
                 ResearchSideUpgrade sideUpgrade =
-                    CopyRequirementsSideUpgradeSelector.Select(scenarioId, progression.SideUpgrades);
+                    CopyRequirementsSideUpgradeSelector.Select(scenarioId, progression);
                 mechanics = sideUpgrade.RequiredMechanics.ToArray();
                 upgrades = sideUpgrade.RequiredUpgrades.ToArray();
             }
@@ -112,6 +117,8 @@ namespace ShapezShifter.Flow.Atomic
 
         IPresentableUnlockableSideUpgradeBuilder WithCustomRequirements(IEnumerable<ResearchMechanicId> mechanics,
             IEnumerable<ResearchUpgradeId> upgrades);
+
+        IPresentableUnlockableSideUpgradeBuilder WithoutCustomRequirements();
     }
 
 
