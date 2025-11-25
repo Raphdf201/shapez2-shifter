@@ -47,6 +47,59 @@ namespace ShapezShifter.Flow.Atomic
             return this;
         }
 
+        public ISingleTileConnectorDataBuilder AddWireInput(WireConnectorConfig wireConnectorConfig)
+        {
+            BuildingConnectors.Add(
+                new BuildingSignalInput
+                {
+                    Position_L = TileVector.Zero,
+                    Direction_L = wireConnectorConfig.Direction.Value,
+                    _IOType = wireConnectorConfig.IoType,
+                    TileDirection =  wireConnectorConfig.Direction,
+                });
+            return this;
+        }
+
+
+        public ISingleTileConnectorDataBuilder AddWireOutput(WireConnectorConfig wireConnectorConfig)
+        {
+            BuildingConnectors.Add(
+                new BuildingSignalOutput
+                {
+                    Position_L = TileVector.Zero,
+                    Direction_L = wireConnectorConfig.Direction.Value,
+                    _IOType = wireConnectorConfig.IoType,
+                    TileDirection =  wireConnectorConfig.Direction,
+                });
+            return this;
+        }
+
+        public ISingleTileConnectorDataBuilder AddFluidInput(FluidConnectorConfig fluidConnectorConfig)
+        {
+            BuildingConnectors.Add(
+                new BuildingFluidInput
+                {
+                    Position_L = TileVector.Zero,
+                    Direction_L = fluidConnectorConfig.Direction.Value,
+                    _IOType = fluidConnectorConfig.IoType,
+                    TileDirection = fluidConnectorConfig.Direction
+                });
+            return this;
+        }
+
+        public ISingleTileConnectorDataBuilder AddFluidOutput(FluidConnectorConfig fluidConnectorConfig)
+        {
+            BuildingConnectors.Add(
+                new BuildingFluidOutput
+                {
+                    Position_L = TileVector.Zero,
+                    Direction_L = fluidConnectorConfig.Direction.Value,
+                    _IOType = fluidConnectorConfig.IoType,
+                    TileDirection = fluidConnectorConfig.Direction
+                });
+            return this;
+        }
+
         public IBuildingConnectorData Build()
         {
             TileVector[] tiles = { TileVector.Zero };
@@ -63,31 +116,6 @@ namespace ShapezShifter.Flow.Atomic
                 center,
                 tileDimensions);
         }
-        
-        public ISingleTileConnectorDataBuilder AddWireInput(WireConnectorConfig signalInput)
-        {
-            BuildingConnectors.Add(
-                new BuildingSignalInput
-                {
-                    Position_L = TileVector.Zero,
-                    _IOType = signalInput.IoType,
-                    TileDirection =  signalInput.Direction,
-                });
-            return this;
-        }
-
-
-        public ISingleTileConnectorDataBuilder AddWireOutput(WireConnectorConfig signalOutput)
-        {
-            BuildingConnectors.Add(
-                new BuildingSignalOutput
-                {
-                    Position_L = TileVector.Zero,
-                    _IOType = signalOutput.IoType,
-                    TileDirection =  signalOutput.Direction,
-                });
-            return this;
-        }
     }
 
     public interface ISingleTileConnectorDataBuilder
@@ -95,8 +123,11 @@ namespace ShapezShifter.Flow.Atomic
         ISingleTileConnectorDataBuilder AddShapeInput(ShapeConnectorConfig shapeConnectorConfig);
         ISingleTileConnectorDataBuilder AddShapeOutput(ShapeConnectorConfig shapeConnectorConfig);
 
-        ISingleTileConnectorDataBuilder AddWireInput(WireConnectorConfig signalInput);
-        ISingleTileConnectorDataBuilder AddWireOutput(WireConnectorConfig signalOutput);
+        ISingleTileConnectorDataBuilder AddWireInput(WireConnectorConfig wireConnectorConfig);
+        ISingleTileConnectorDataBuilder AddWireOutput(WireConnectorConfig wireConnectorConfig);
+
+        ISingleTileConnectorDataBuilder AddFluidInput(FluidConnectorConfig fluidConnectorConfig);
+        ISingleTileConnectorDataBuilder AddFluidOutput(FluidConnectorConfig fluidConnectorConfig);
 
         IBuildingConnectorData Build();
     }

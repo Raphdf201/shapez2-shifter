@@ -66,4 +66,39 @@ namespace ShapezShifter.Flow.Atomic
             return new WireConnectorConfig(direction, ioType);
         }
     }
+    
+    public struct FluidConnectorConfig
+    {
+        public readonly TileDirection Direction;
+        public readonly BuildingFluidIOType IoType;
+
+        private FluidConnectorConfig(TileDirection direction,
+            BuildingFluidIOType ioType = BuildingFluidIOType.Pipe)
+        {
+            Direction = direction;
+            IoType = ioType;
+        }
+
+        public static FluidConnectorConfig DefaultInput(BuildingFluidIOType ioType = BuildingFluidIOType.Pipe)
+        {
+            return new FluidConnectorConfig(TileDirection.West, ioType);
+        }
+
+        public static FluidConnectorConfig DefaultOutput(BuildingFluidIOType ioType = BuildingFluidIOType.Pipe)
+        {
+            return new FluidConnectorConfig(TileDirection.East, ioType);
+        }
+
+        public static FluidConnectorConfig CustomInput(TileDirection direction,
+            BuildingFluidIOType ioType = BuildingFluidIOType.Pipe)
+        {
+            return new FluidConnectorConfig(direction, ioType);
+        }
+
+        public static FluidConnectorConfig CustomOutput(TileDirection direction,
+            BuildingFluidIOType ioType = BuildingFluidIOType.Pipe)
+        {
+            return new FluidConnectorConfig(direction, ioType);
+        }
+    }
 }
