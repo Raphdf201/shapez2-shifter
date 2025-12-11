@@ -40,7 +40,8 @@ namespace ShapezShifter.Flow
             Action<DebugConsole.CommandContext> handler, bool isCheat = false, DebugConsole.ConsoleOption? arg1 = null,
             DebugConsole.ConsoleOption? arg2 = null)
         {
-            return ConsoleCommand.Register(commandName, handler, isCheat, arg1, arg2);
+            string cmdName = mod.GetType().Assembly.GetName().Name.ToLower() + "." + commandName;
+            return ConsoleCommand.Register(cmdName, handler, isCheat, arg1, arg2);
         }
     }
 }
