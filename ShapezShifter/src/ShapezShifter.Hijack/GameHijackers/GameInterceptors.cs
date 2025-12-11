@@ -15,6 +15,7 @@ namespace ShapezShifter.Hijack
         private readonly IslandsInterceptor IslandsInterceptor;
         private readonly IslandModulesInterceptor IslandModulesInterceptor;
         private readonly SaveDataInterceptor SaveDataInterceptor;
+        private readonly KeybindingsInterceptor KeybindingsInterceptor;
 
         public GameInterceptors(IRewirerProvider rewirerProvider, ILogger logger)
         {
@@ -28,6 +29,7 @@ namespace ShapezShifter.Hijack
             SimulationSystemsInterceptor = new SimulationSystemsInterceptor(rewirerProvider);
             BuffablesInterceptor = new BuffablesInterceptor(rewirerProvider);
             SaveDataInterceptor = new SaveDataInterceptor(rewirerProvider, logger);
+            KeybindingsInterceptor = new KeybindingsInterceptor(rewirerProvider, logger);
         }
 
         public void Dispose()
@@ -42,6 +44,7 @@ namespace ShapezShifter.Hijack
             IslandsInterceptor.Dispose();
             IslandModulesInterceptor.Dispose();
             SaveDataInterceptor.Dispose();
+            KeybindingsInterceptor.Dispose();
         }
     }
 }
