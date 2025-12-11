@@ -37,7 +37,7 @@ namespace ShapezShifter.Flow
         /// <param name="arg2">The second argument of the command (optional)</param>
         /// <returns>A rewirer handle that can be used to unregister the command</returns>
         public static RewirerHandle RegisterConsoleCommand(this IMod mod, string commandName,
-            Action<DebugConsole.CommandContext> handler, bool isCheat, DebugConsole.ConsoleOption? arg1 = null,
+            Action<DebugConsole.CommandContext> handler, bool isCheat = false, DebugConsole.ConsoleOption? arg1 = null,
             DebugConsole.ConsoleOption? arg2 = null)
         {
             return ConsoleCommand.Register(commandName, handler, isCheat, arg1, arg2);
