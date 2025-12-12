@@ -16,6 +16,7 @@ namespace ShapezShifter.Hijack
         private readonly IslandModulesInterceptor IslandModulesInterceptor;
         private readonly SaveDataInterceptor SaveDataInterceptor;
         private readonly ConsoleInterceptor ConsoleInterceptor;
+        private readonly TickInterceptor TickInterceptor;
 
         public GameInterceptors(IRewirerProvider rewirerProvider, ILogger logger)
         {
@@ -30,6 +31,7 @@ namespace ShapezShifter.Hijack
             BuffablesInterceptor = new BuffablesInterceptor(rewirerProvider);
             SaveDataInterceptor = new SaveDataInterceptor(rewirerProvider, logger);
             ConsoleInterceptor = new ConsoleInterceptor(rewirerProvider, logger);
+            TickInterceptor = new TickInterceptor(rewirerProvider);
         }
 
         public void Dispose()
@@ -45,6 +47,7 @@ namespace ShapezShifter.Hijack
             IslandModulesInterceptor.Dispose();
             SaveDataInterceptor.Dispose();
             ConsoleInterceptor.Dispose();
+            TickInterceptor.Dispose();
         }
     }
 }

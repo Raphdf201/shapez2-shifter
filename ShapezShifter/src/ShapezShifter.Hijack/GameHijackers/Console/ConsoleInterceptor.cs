@@ -30,8 +30,6 @@ namespace ShapezShifter.Hijack
             IEnumerable<IConsoleRewirer> consoleRewirers = 
                 RewirerProvider.RewirersOfType<IConsoleRewirer>();
 
-            Logger.Info?.Log("Intercepting console commands registration");
-
             foreach (IConsoleRewirer consoleRewirer in consoleRewirers)
             {
                 try

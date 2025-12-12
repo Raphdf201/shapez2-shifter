@@ -30,7 +30,7 @@ namespace ShapezShifter.Flow
         /// Register a console command for this mod
         /// </summary>
         /// <param name="mod">The mod instance</param>
-        /// <param name="commandName">The command name (e.g., "mymod.hello")</param>
+        /// <param name="commandName">The command name (e.g., "hello")</param>
         /// <param name="handler">The command handler</param>
         /// <param name="isCheat">Weather the command needs cheats enabled to run or not</param>
         /// <param name="arg1">The first argument of the command (optional)</param>
@@ -42,6 +42,11 @@ namespace ShapezShifter.Flow
         {
             string cmdName = mod.GetType().Assembly.GetName().Name.ToLower() + "." + commandName;
             return ConsoleCommand.Register(cmdName, handler, isCheat, arg1, arg2);
+        }
+
+        public static RewirerHandle RunPeriodically(this IMod mod, Action<GameSessionOrchestrator, float> action)
+        {
+            return TickRewirer.Register(action);
         }
     }
 }
