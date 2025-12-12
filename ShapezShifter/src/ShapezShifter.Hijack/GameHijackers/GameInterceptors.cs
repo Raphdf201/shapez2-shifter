@@ -17,6 +17,7 @@ namespace ShapezShifter.Hijack
         private readonly SaveDataInterceptor SaveDataInterceptor;
         private readonly ConsoleInterceptor ConsoleInterceptor;
         private readonly TickInterceptor TickInterceptor;
+        private readonly KeybindingsInterceptor KeybindingsInterceptor;
 
         public GameInterceptors(IRewirerProvider rewirerProvider, ILogger logger)
         {
@@ -32,6 +33,7 @@ namespace ShapezShifter.Hijack
             SaveDataInterceptor = new SaveDataInterceptor(rewirerProvider, logger);
             ConsoleInterceptor = new ConsoleInterceptor(rewirerProvider, logger);
             TickInterceptor = new TickInterceptor(rewirerProvider);
+            KeybindingsInterceptor = new KeybindingsInterceptor(rewirerProvider, logger);
         }
 
         public void Dispose()
@@ -48,6 +50,7 @@ namespace ShapezShifter.Hijack
             SaveDataInterceptor.Dispose();
             ConsoleInterceptor.Dispose();
             TickInterceptor.Dispose();
+            KeybindingsInterceptor.Dispose();
         }
     }
 }
