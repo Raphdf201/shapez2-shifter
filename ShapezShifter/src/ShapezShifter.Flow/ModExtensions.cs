@@ -38,9 +38,13 @@ namespace ShapezShifter.Flow
         /// <returns>A rewirer handle that can be used to unregister the command</returns>
         public static RewirerHandle RegisterConsoleCommand(this IMod mod, string commandName,
             Action<DebugConsole.CommandContext> handler, bool isCheat = false, DebugConsole.ConsoleOption? arg1 = null,
-            DebugConsole.ConsoleOption? arg2 = null)
+            DebugConsole.ConsoleOption? arg2 = null, bool useAssemblyPrefix = true)
         {
-            string cmdName = mod.GetType().Assembly.GetName().Name.ToLower() + "." + commandName;
+            string cmdName = commandName;
+            if (useAssemblyPrefix)
+            {
+                cmdName = mod.GetType().Assembly.GetName().Name.ToLower() + "." + commandName;
+            }
             return ConsoleCommand.Register(cmdName, handler, isCheat, arg1, arg2);
         }
 
