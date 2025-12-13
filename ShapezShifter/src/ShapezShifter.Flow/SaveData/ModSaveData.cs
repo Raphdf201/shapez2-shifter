@@ -14,9 +14,19 @@ namespace ShapezShifter.Flow
             set => _data = value;
         }
 
-        public event Action<T> OnDataLoaded;
+        private Action<T> _onDataLoaded;
+        public event Action<T> OnDataLoaded
+        {
+            add => _onDataLoaded += value;
+            remove => _onDataLoaded -= value;
+        }
 
-        public event Action<T> OnDataSaving;
+        private Action<T> _onDataSaving;
+        public event Action<T> OnDataSaving
+        {
+            add => _onDataSaving += value;
+            remove => _onDataSaving -= value;
+        }
 
         public ModSaveData(string fileName, T defaultData = null)
         {
@@ -43,7 +53,7 @@ namespace ShapezShifter.Flow
         {
             try
             {
-                OnDataSaving?.Invoke(_data);
+                _onDataSaving?.Invoke(_data);
                 writer.WriteObjectAsJson(FileName, _data);
             }
             catch (Exception ex)
@@ -57,7 +67,7 @@ namespace ShapezShifter.Flow
             try
             {
                 _data = reader.ReadObjectFromJson<T>(FileName);
-                OnDataLoaded?.Invoke(_data);
+                _onDataLoaded?.Invoke(_data);
             }
             catch (Exception)
             {
