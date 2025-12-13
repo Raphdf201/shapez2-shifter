@@ -35,6 +35,7 @@ namespace ShapezShifter.Flow
         /// <param name="isCheat">Weather the command needs cheats enabled to run or not</param>
         /// <param name="arg1">The first argument of the command (optional)</param>
         /// <param name="arg2">The second argument of the command (optional)</param>
+        /// <param name="useAssemblyPrefix">Whether to prefix the command with the assembly name</param>
         /// <returns>A rewirer handle that can be used to unregister the command</returns>
         public static RewirerHandle RegisterConsoleCommand(this IMod mod, string commandName,
             Action<DebugConsole.CommandContext> handler, bool isCheat = false, DebugConsole.ConsoleOption? arg1 = null,
