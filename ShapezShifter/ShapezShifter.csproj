@@ -138,8 +138,8 @@
             <Private>False</Private>
         </Reference>
 
-        <Reference Include="NewtonSoft.Json">
-            <HintPath>$(SPZ2_PATH)\NewtonSoft.Json.dll</HintPath>
+        <Reference Include="Newtonsoft.Json">
+            <HintPath>$(SPZ2_PATH)\Newtonsoft.Json.dll</HintPath>
             <Private>False</Private>
         </Reference>
     </ItemGroup>
