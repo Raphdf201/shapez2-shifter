@@ -108,6 +108,11 @@ namespace ShapezShifter.Flow
             return this;
         }
 
+        public IBuildingBuilder WithoutEfficiencyData()
+        {
+            return this;
+        }
+
         public BuildingDefinition BuildAndRegister(BuildingDefinitionGroup group,
             GameBuildings gameBuildings)
         {
@@ -222,5 +227,6 @@ namespace ShapezShifter.Flow
     public interface IIdentifiableConnectableRenderablePredictableAudibleConfigurableBuildingBuilder
     {
         IBuildingBuilder WithEfficiencyData(BuildingEfficiencyData buildingEfficiencyData);
+        IBuildingBuilder WithoutEfficiencyData();
     }
 }
