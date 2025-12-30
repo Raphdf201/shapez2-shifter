@@ -84,7 +84,7 @@ namespace ShapezShifter.Hijack
             ResearchProgression layout,
             Viewport viewport)
         {
-            Logger.Info?.Log("Intercepting savegame deserialization for mod data");
+            Logger.Info?.Log("Intercepting savegame deserialization for save data");
 
             // Get all save data rewirers
             IEnumerable<ISaveDataRewirer> saveDataRewirers =
@@ -94,6 +94,7 @@ namespace ShapezShifter.Hijack
             {
                 try
                 {
+                    Logger.Info?.Log($"Doing rewirer {rewirer.GetFileName()}");
                     rewirer.OnLoad(reader);
                 }
                 catch (Exception ex)

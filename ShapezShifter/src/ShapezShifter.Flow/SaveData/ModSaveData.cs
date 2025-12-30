@@ -6,13 +6,7 @@ namespace ShapezShifter.Flow
     public class ModSaveData<T> : ISaveDataRewirer where T : class, new()
     {
         private readonly string FileName;
-        private T _data;
-
-        public T Data
-        {
-            get => _data;
-            set => _data = value;
-        }
+        public T Data { get; set; }
 
         private Action<T> _onDataLoaded;
         public event Action<T> OnDataLoaded
@@ -41,20 +35,22 @@ namespace ShapezShifter.Flow
             }
 
             FileName = fileName;
-            _data = defaultData ?? new T();
+            Data = defaultData ?? new T();
+            
+            Debugging.Logger?.Debug?.Log($"Loaded {FileName}, using defaults");
         }
 
         public void Reset(T defaultData = null)
         {
-            _data = defaultData ?? new T();
+            Data = defaultData ?? new T();
         }
 
         void ISaveDataRewirer.OnSave(ISavegameBlobWriter writer)
         {
             try
             {
-                _onDataSaving?.Invoke(_data);
-                writer.WriteObjectAsJson(FileName, _data);
+                _onDataSaving?.Invoke(Data);
+                writer.WriteObjectAsJson(FileName, Data);
             }
             catch (Exception ex)
             {
@@ -66,14 +62,20 @@ namespace ShapezShifter.Flow
         {
             try
             {
-                _data = reader.ReadObjectFromJson<T>(FileName);
-                _onDataLoaded?.Invoke(_data);
+                Data = reader.ReadObjectFromJson<T>(FileName);
+                Debugging.Logger?.Debug?.Log($"fname: {FileName}");
+                _onDataLoaded?.Invoke(Data);
             }
             catch (Exception)
             {
-                _data = new T();
+                Data = new T();
                 Debugging.Logger?.Info?.Log($"No existing save data found for {FileName}, using defaults");
             }
+        }
+
+        string ISaveDataRewirer.GetFileName()
+        {
+            return FileName;
         }
     }
 }

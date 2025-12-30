@@ -27,12 +27,10 @@ namespace ShapezShifter.Hijack
 
         public void Write(string filename, System.Action<BinaryStringLUTSerializationVisitor> handler)
         {
-            using (MemoryStream memoryStream = new MemoryStream())
-            {
-                // Note: We can't create a full BinaryStringLUTSerializationVisitor here without access to all dependencies
-                // Mods should use WriteObjectAsJson for simplicity
-                Logger.Warning?.Log($"Binary write not fully supported in mod save data. Use WriteObjectAsJson instead. File: {filename}");
-            }
+            using MemoryStream memoryStream = new();
+            // Note: We can't create a full BinaryStringLUTSerializationVisitor here without access to all dependencies
+            // Mods should use WriteObjectAsJson for simplicity
+            Logger.Warning?.Log($"Binary write not fully supported in mod save data. Use WriteObjectAsJson instead. File: {filename}");
         }
 
         public void WriteObjectAsJson<T>(string filename, T obj)
@@ -40,6 +38,7 @@ namespace ShapezShifter.Hijack
             try
             {
                 string json = JsonConvert.SerializeObject(obj, SavegameSerializer.JsonSettings);
+                Logger.Info?.Log($"Json : {json}");
                 byte[] data = Encoding.GetBytes(json);
                 
                 if (ModData.TryAdd(filename, data))

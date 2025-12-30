@@ -4,5 +4,6 @@ namespace ShapezShifter.Hijack
     {
         void OnSave(ISavegameBlobWriter writer);
         void OnLoad(SavegameBlobReader reader);
+        string GetFileName();
     }
 }
