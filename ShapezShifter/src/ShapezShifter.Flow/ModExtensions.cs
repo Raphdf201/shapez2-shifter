@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using ShapezShifter.Hijack;
 
 #nullable enable
@@ -30,7 +31,7 @@ namespace ShapezShifter.Flow
         /// Register a console command for this mod
         /// </summary>
         /// <param name="mod">The mod instance</param>
-        /// <param name="commandName">The command name (e.g., "hello")</param>
+        /// <param name="commandName">The command name (e.g., "hello"). Must be lowercase</param>
         /// <param name="handler">The command handler</param>
         /// <param name="isCheat">Weather the command needs cheats enabled to run or not</param>
         /// <param name="arg1">The first argument of the command (optional)</param>
@@ -41,12 +42,17 @@ namespace ShapezShifter.Flow
             Action<DebugConsole.CommandContext> handler, bool isCheat = false, DebugConsole.ConsoleOption? arg1 = null,
             DebugConsole.ConsoleOption? arg2 = null, bool useAssemblyPrefix = true)
         {
-            string cmdName = commandName;
+            var processedName = commandName;
             if (useAssemblyPrefix)
             {
-                cmdName = mod.GetType().Assembly.GetName().Name.ToLower() + "." + commandName;
+                processedName = mod.GetType().Assembly.GetName().Name + "." + commandName;
             }
-            return ConsoleCommand.Register(cmdName, handler, isCheat, arg1, arg2);
+            if (processedName.Any(char.IsUpper))
+            {
+                Debugging.Logger?.Warning?.Log("Console commands can't contain uppercase characters. The command has been lowercased");
+                processedName = processedName.ToLower();
+            }
+            return ConsoleCommand.Register(processedName, handler, isCheat, arg1, arg2);
         }
 
         public static RewirerHandle RunPeriodically(this IMod mod, Action<GameSessionOrchestrator, float> action)
