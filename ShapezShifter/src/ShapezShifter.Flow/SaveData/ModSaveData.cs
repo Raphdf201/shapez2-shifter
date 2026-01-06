@@ -28,7 +28,7 @@ namespace ShapezShifter.Flow
             remove => _onDataSaving -= value;
         }
 
-        public ModSaveData(string fileName, T defaultData = null)
+        private ModSaveData(string fileName, T defaultData = null)
         {
             if (string.IsNullOrWhiteSpace(fileName))
             {
@@ -74,6 +74,13 @@ namespace ShapezShifter.Flow
                 _data = new T();
                 Debugging.Logger?.Info?.Log($"No existing save data found for {FileName}, using defaults");
             }
+        }
+
+        internal static (ModSaveData<T>, RewirerHandle) Register(string fileName, T defaultData = null)
+        {
+            var obj = new ModSaveData<T>(fileName, defaultData);
+            var handle = GameRewirers.AddRewirer(obj);
+            return (obj, handle);
         }
     }
 }
