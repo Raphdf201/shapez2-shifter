@@ -24,8 +24,8 @@ namespace ShapezShifter.Kit
 
         private static string GetDirectoryLocation(Type t)
         {
-            DirectoryInfo parent = Directory.GetParent(t.Assembly.Location);
-            return parent == null ? throw new Exception("Invalid assembly location") : parent.FullPath;
+            var parent = Directory.GetParent(t.Assembly.Location);
+            return parent == null ? throw new Exception("Invalid assembly location") : parent.FullName;
         }
     }
 

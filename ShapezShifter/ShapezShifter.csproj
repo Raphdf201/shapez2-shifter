@@ -144,18 +144,10 @@
         </Reference>
     </ItemGroup>
 
-    <PropertyGroup>
-        <PublicizeAll>true</PublicizeAll>
-    </PropertyGroup>
-
     <ItemGroup>
-        <DoNotPublicize Include="System.Collections.Generic:Dictionary" IncludeCompilerGeneratedMembers="false" IncludeVirtualMembers="false"/>
-        <DoNotPublicize Include="SPZGameAssembly:BeltLaneRenderingDefinition" IncludeCompilerGeneratedMembers="false" IncludeVirtualMembers="false"/>
-        <DoNotPublicize Include="Game.Core.Coordinates" IncludeCompilerGeneratedMembers="false" IncludeVirtualMembers="false"/>
-        <DoNotPublicize Include="SPZGameAssembly:BuildingDefinition" IncludeCompilerGeneratedMembers="false" IncludeVirtualMembers="false"/>
-        <DoNotPublicize Include="Game.Orchestration:ParentToolbarElementData" IncludeCompilerGeneratedMembers="false" IncludeVirtualMembers="false"/>
-        <DoNotPublicize Include="Game.Orchestration:RootToolbarElementData" IncludeCompilerGeneratedMembers="false" IncludeVirtualMembers="false"/>
-
+        <Publicize Include="SPZGameAssembly"/>
+        <Publicize Include="Game.Orchestration"/>
+        <Publicize Include="Game.Core.Map.Simulation"/>
     </ItemGroup>
 
 
