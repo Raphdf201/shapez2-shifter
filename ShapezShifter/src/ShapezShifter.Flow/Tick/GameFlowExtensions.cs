@@ -7,11 +7,11 @@ namespace ShapezShifter.Flow
     /// <summary>
     /// Extension methods to make mod development easier
     /// </summary>
-    public static class ModExtensions
+    public static class GameFlowExtensions
     {
-        public static RewirerHandle RunPeriodically(this IMod mod, Action<GameSessionOrchestrator, float> action)
+        public static RewirerHandle OnTick(this IMod mod, Action<float> action)
         {
-            return TickRewirer.Register(action);
+            return GameRewirers.AddRewirer(new ActionTickRewirer(action));
         }
     }
 }

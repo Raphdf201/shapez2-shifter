@@ -23,7 +23,7 @@ namespace ShapezShifter.Hijack
 
             foreach (ITickRewirer tickRewirer in tickRewirers)
             {
-                tickRewirer.RunPeriodically()(arg1: orchestrator, arg2: time);
+                tickRewirer.Tick(time);
             }
         }
 
