@@ -114,7 +114,7 @@ namespace ShapezShifter.Flow
         }
 
         /// <param name="mod">The mod instance</param>
-        ///   <typeparam name="T">The type of mod save data that is attached</typeparam>
+        /// <typeparam name="T">The type of mod save data that is attached</typeparam>
         /// <returns>
         /// Returns a default object created by the factory:
         /// <list type="number">
