@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Core.Collections;
 using Core.Collections.Scoped;
 using Core.Logging;
 
@@ -11,8 +12,9 @@ namespace ShapezShifter.Hijack
         private readonly ILogger Logger;
         private int VersionCacheIsBased;
 
-        private readonly MultiValueDictionary<Type, IRewirer, ScopedList<IRewirer>> DataPerTypeCache =
-            new(ScopedList<IRewirer>.Get, ScopedList<IRewirer>.Return);
+        private readonly MultiValueDictionary<Type, IRewirer, ScopedList<IRewirer>> DataPerTypeCache = new(
+            activator: ScopedList<IRewirer>.Get,
+            deactivator: ScopedList<IRewirer>.Return);
 
         private readonly ScopedHashSet<Type> CachedTypes = ScopedHashSet<Type>.Get();
 
@@ -31,7 +33,6 @@ namespace ShapezShifter.Hijack
                 VersionCacheIsBased = GameRewirers.Version;
             }
 
-
             // LogDictionary();
 
             if (!CachedTypes.Contains(typeof(TRewirer)))
@@ -42,10 +43,9 @@ namespace ShapezShifter.Hijack
 
             // LogDictionary();
 
-            IEnumerable<TRewirer> rewirersList =
-                DataPerTypeCache.TryGetValuesForKey(typeof(TRewirer), out ScopedList<IRewirer> list)
-                    ? list.Cast<TRewirer>()
-                    : Array.Empty<TRewirer>();
+            var rewirersList = DataPerTypeCache.TryGetValuesForKey(key: typeof(TRewirer), values: out var list)
+                ? list.Cast<TRewirer>()
+                : Array.Empty<TRewirer>();
 
             return rewirersList;
         }
@@ -57,7 +57,7 @@ namespace ShapezShifter.Hijack
 
             foreach (Type type in DataPerTypeCache.Keys)
             {
-                if (!DataPerTypeCache.TryGetValuesForKey(type, out ScopedList<IRewirer> list))
+                if (!DataPerTypeCache.TryGetValuesForKey(key: type, values: out var list))
                 {
                     Logger.Error?.Log("Huh?");
                 }
@@ -74,12 +74,12 @@ namespace ShapezShifter.Hijack
 
         private void UpdateCacheEntryForType<TData>()
         {
-            using ScopedList<object> data = ScopedList<object>.Get();
+            using var data = ScopedList<object>.Get();
             foreach (IRewirer obj in GameRewirers.Rewirers)
             {
                 if (obj is TData)
                 {
-                    DataPerTypeCache.AddValue(typeof(TData), obj);
+                    DataPerTypeCache.AddValue(key: typeof(TData), value: obj);
                 }
             }
         }

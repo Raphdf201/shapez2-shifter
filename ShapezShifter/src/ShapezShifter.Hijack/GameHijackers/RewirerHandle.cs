@@ -5,7 +5,7 @@ namespace ShapezShifter.Hijack
 {
     public readonly struct RewirerHandle : IEquatable<RewirerHandle>
     {
-        internal static readonly RewirerHandle Invalid = default;
+        internal static readonly RewirerHandle Invalid = default(RewirerHandle);
         private readonly int Id;
 
         private RewirerHandle(int id)

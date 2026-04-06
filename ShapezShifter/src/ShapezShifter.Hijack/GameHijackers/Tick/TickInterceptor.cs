@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using MonoMod.RuntimeDetour;
 using ShapezShifter.SharpDetour;
 
@@ -14,18 +13,17 @@ namespace ShapezShifter.Hijack
         {
             RewirerProvider = rewirerProvider;
             TickHook = DetourHelper.CreatePostfixHook<GameSessionOrchestrator, float>(
-                (orchestrator, time) => orchestrator.Tick(time),
-                Update);
+                original: (orchestrator, time) => orchestrator.Tick(time),
+                postfix: Update);
         }
 
         private void Update(GameSessionOrchestrator orchestrator, float time)
         {
-            IEnumerable<ITickRewirer> tickRewirers =
-                RewirerProvider.RewirersOfType<ITickRewirer>();
+            var tickRewirers = RewirerProvider.RewirersOfType<ITickRewirer>();
 
             foreach (ITickRewirer tickRewirer in tickRewirers)
             {
-                tickRewirer.RunPeriodically()(orchestrator, time);
+                tickRewirer.RunPeriodically()(arg1: orchestrator, arg2: time);
             }
         }
 

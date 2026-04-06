@@ -9,21 +9,25 @@ namespace ShapezShifter.SharpDetour
     [PublicAPI]
     public static class ReflectionSetHelper
     {
-        public static Hook Set<TStruct, TField>(this ref TStruct structure, Expression<Func<TStruct, TField>> expr,
+        public static Hook Set<TStruct, TField>(
+            this ref TStruct structure,
+            Expression<Func<TStruct, TField>> expr,
             TField value)
             where TStruct : struct
         {
-            if (TryGetAccessedField(expr, out var fieldInfo))
+            if (TryGetAccessedField(expression: expr, field: out FieldInfo fieldInfo))
             {
                 object str = structure;
-                fieldInfo.SetValue(str, value);
+                fieldInfo.SetValue(obj: str, value: value);
                 structure = (TStruct)str;
                 return null;
             }
 
-            if (TryGetAccessedProperty(expr, out var property))
+            if (TryGetAccessedProperty(expression: expr, property: out PropertyInfo property))
             {
-                return new Hook(property.GetGetMethod(), new GetterStructDelegate<TStruct, TField>(GetterRef));
+                return new Hook(
+                    source: property.GetGetMethod(),
+                    target: new GetterStructDelegate<TStruct, TField>(GetterRef));
 
                 TField GetterRef(ref TStruct s)
                 {
@@ -37,16 +41,17 @@ namespace ShapezShifter.SharpDetour
         public static Hook Set<TObject, TField>(this TObject obj, Expression<Func<TObject, TField>> expr, TField value)
             where TObject : class
         {
-            if (TryGetAccessedField(expr, out var fieldInfo))
+            if (TryGetAccessedField(expression: expr, field: out FieldInfo fieldInfo))
             {
-                fieldInfo.SetValue(obj, value);
+                fieldInfo.SetValue(obj: obj, value: value);
                 return null;
             }
 
-
-            if (TryGetAccessedProperty(expr, out var property))
+            if (TryGetAccessedProperty(expression: expr, property: out PropertyInfo property))
             {
-                return new Hook(property.GetGetMethod(true), new GetterClassDelegate<TObject, TField>(Getter));
+                return new Hook(
+                    source: property.GetGetMethod(true),
+                    target: new GetterClassDelegate<TObject, TField>(Getter));
 
                 TField Getter(TObject o)
                 {
@@ -57,8 +62,8 @@ namespace ShapezShifter.SharpDetour
             throw new Exception($"Expected member to be a field or property, but got {expr.GetType()}");
         }
 
-
-        private static bool TryGetAccessedField<TObject, TField>(Expression<Func<TObject, TField>> expression,
+        private static bool TryGetAccessedField<TObject, TField>(
+            Expression<Func<TObject, TField>> expression,
             out FieldInfo field)
         {
             if (expression.Body is not MemberExpression memberExpr)
@@ -89,7 +94,8 @@ namespace ShapezShifter.SharpDetour
             return true;
         }
 
-        public static bool TryGetAccessedProperty<TObject, TField>(Expression<Func<TObject, TField>> expression,
+        public static bool TryGetAccessedProperty<TObject, TField>(
+            Expression<Func<TObject, TField>> expression,
             out PropertyInfo property)
         {
             if (expression.Body is not MemberExpression memberExpr)

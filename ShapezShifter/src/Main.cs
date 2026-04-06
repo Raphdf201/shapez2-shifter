@@ -26,7 +26,9 @@ namespace ShapezShifter
             SetupPathEnvironmentVariable(logger);
 
             CachedStaticallyAccessibleRewirerProvider staticallyAccessibleRewirerProvider = new(logger);
-            GameInterceptors = new GameInterceptors(staticallyAccessibleRewirerProvider, logger);
+            GameInterceptors = new GameInterceptors(
+                rewirerProvider: staticallyAccessibleRewirerProvider,
+                logger: logger);
         }
 
         private static void SetupPathEnvironmentVariable(ILogger logger)
@@ -39,7 +41,10 @@ namespace ShapezShifter
             const string environmentVariable = "SPZ2_SHIFTER";
             string path = typeof(Main).Assembly.Location;
             logger.Info?.Log($"Setting environment variable {environmentVariable} to {path}");
-            Environment.SetEnvironmentVariable(environmentVariable, path, EnvironmentVariableTarget.User);
+            Environment.SetEnvironmentVariable(
+                variable: environmentVariable,
+                value: path,
+                target: EnvironmentVariableTarget.User);
         }
 
         public void Dispose()

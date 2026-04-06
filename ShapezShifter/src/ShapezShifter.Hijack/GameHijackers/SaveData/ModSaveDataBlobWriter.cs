@@ -16,7 +16,10 @@ namespace ShapezShifter.Hijack
         private readonly ConcurrentDictionary<string, byte[]> ModData;
         private readonly ILogger Logger;
 
-        public Encoding Encoding => SavegameSerializer.Encoding;
+        public Encoding Encoding
+        {
+            get { return SavegameSerializer.Encoding; }
+        }
 
         public ModSaveDataBlobWriter(IReadOnlyDictionary<string, byte[]> originalData, ILogger logger)
         {
@@ -27,11 +30,12 @@ namespace ShapezShifter.Hijack
 
         public void Write(string filename, System.Action<BinaryStringLUTSerializationVisitor> handler)
         {
-            using (MemoryStream memoryStream = new MemoryStream())
+            using (var memoryStream = new MemoryStream())
             {
                 // Note: We can't create a full BinaryStringLUTSerializationVisitor here without access to all dependencies
                 // Mods should use WriteObjectAsJson for simplicity
-                Logger.Warning?.Log($"Binary write not fully supported in mod save data. Use WriteObjectAsJson instead. File: {filename}");
+                Logger.Warning?.Log(
+                    $"Binary write not fully supported in mod save data. Use WriteObjectAsJson instead. File: {filename}");
             }
         }
 
@@ -39,10 +43,10 @@ namespace ShapezShifter.Hijack
         {
             try
             {
-                string json = JsonConvert.SerializeObject(obj, SavegameSerializer.JsonSettings);
+                string json = JsonConvert.SerializeObject(value: obj, settings: SavegameSerializer.JsonSettings);
                 byte[] data = Encoding.GetBytes(json);
-                
-                if (ModData.TryAdd(filename, data))
+
+                if (ModData.TryAdd(key: filename, value: data))
                 {
                     Logger.Info?.Log($"Mod added save data file: {filename}");
                 }
@@ -60,13 +64,13 @@ namespace ShapezShifter.Hijack
         public IReadOnlyDictionary<string, byte[]> GetCombinedData()
         {
             // Combine original game data with mod data
-            Dictionary<string, byte[]> combined = new Dictionary<string, byte[]>(OriginalData);
-            
-            foreach (KeyValuePair<string, byte[]> modEntry in ModData)
+            var combined = new Dictionary<string, byte[]>(OriginalData);
+
+            foreach (var modEntry in ModData)
             {
                 combined[modEntry.Key] = modEntry.Value;
             }
-            
+
             return combined;
         }
     }

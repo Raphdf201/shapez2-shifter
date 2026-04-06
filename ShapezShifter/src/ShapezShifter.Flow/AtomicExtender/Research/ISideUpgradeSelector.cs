@@ -1,10 +1,8 @@
-using System.Collections.Generic;
-
 namespace ShapezShifter.Flow.Atomic
 {
     public interface ISideUpgradeSelector
     {
-        public ResearchSideUpgrade Select(string scenarioId, ResearchProgression progression);
+        public ResearchSideUpgrade Select(ScenarioId scenarioId, ResearchProgression progression);
     }
 
     public class CustomSideUpgradeSelector : ISideUpgradeSelector
@@ -16,9 +14,9 @@ namespace ShapezShifter.Flow.Atomic
             SideUpgrade = researchSideUpgradeBuilder;
         }
 
-        public ResearchSideUpgrade Select(string scenarioId, ResearchProgression progression)
+        public ResearchSideUpgrade Select(ScenarioId scenarioId, ResearchProgression progression)
         {
-            return SideUpgrade.Build(scenarioId, progression);
+            return SideUpgrade.Build(scenarioId: scenarioId, progression: progression);
         }
     }
 }

@@ -7,19 +7,23 @@ namespace ShapezShifter.Flow.Research
     {
         private readonly ISideUpgradeSelector SideUpgradeSelector;
 
-        public UnlockIslandWithExistingSideUpgradeResearchProgressionExtender(
-            ISideUpgradeSelector sideUpgradeSelector)
+        public UnlockIslandWithExistingSideUpgradeResearchProgressionExtender(ISideUpgradeSelector sideUpgradeSelector)
         {
             SideUpgradeSelector = sideUpgradeSelector;
         }
 
-        public void ExtendResearch(string scenarioId, ResearchProgression researchProgression,
+        public void ExtendResearch(
+            ScenarioId scenarioId,
+            ResearchProgression researchProgression,
             IslandDefinitionGroupId groupId)
         {
-            ResearchSideUpgrade sideUpgrade = SideUpgradeSelector.Select(scenarioId, researchProgression);
-            sideUpgrade.Rewards = sideUpgrade.Rewards
-               .Append(new ResearchRewardIslandGroup(new SerializedResearchRewardIslandGroup(groupId.Name)))
-               .ToList();
+            ResearchSideUpgrade sideUpgrade = SideUpgradeSelector.Select(
+                scenarioId: scenarioId,
+                progression: researchProgression);
+            sideUpgrade.Rewards = sideUpgrade.Rewards.Append(
+                                                  new ResearchRewardIslandGroup(
+                                                      new SerializedResearchRewardIslandGroup(groupId.Name)))
+                                             .ToList();
         }
     }
 }

@@ -4,8 +4,8 @@ using Unity.Core.Logging;
 
 namespace ShapezShifter.Flow.Atomic
 {
-    public class DefaultBuildingPlacementExtender : IShapeBuildingPlacementRewirers,
-        IChainableRewirer<BuildingPlacementResult>
+    public class DefaultBuildingPlacementExtender
+        : IShapeBuildingPlacementRewirers, IChainableRewirer<BuildingPlacementResult>
     {
         private readonly IBuildingDefinition BuildingDefinition;
 
@@ -14,10 +14,11 @@ namespace ShapezShifter.Flow.Atomic
             BuildingDefinition = buildingDefinition;
         }
 
-        public void ModifyBuildingPlacers(BuildingInitiatorsParams @params,
+        public void ModifyBuildingPlacers(
+            BuildingInitiatorsParams @params,
             IPlacementInitiatorIdRegistry placementRegistry)
         {
-            CreatePlacementInitiator(@params, placementRegistry);
+            CreatePlacementInitiator(buildingInitiatorsParams: @params, placementRegistry: placementRegistry);
         }
 
         private void CreatePlacementInitiator(
@@ -25,25 +26,29 @@ namespace ShapezShifter.Flow.Atomic
             IPlacementInitiatorIdRegistry placementRegistry)
         {
             ShapeBuildingsPlacersCreator buildingsCreator = new(
-                buildingInitiatorsParams.Buildings,
-                buildingInitiatorsParams.ProgressManager,
-                buildingInitiatorsParams.EntityPlacementRunner,
-                buildingInitiatorsParams.BuildingsModules,
-                buildingInitiatorsParams.PipetteMap,
-                (ITutorialState)buildingInitiatorsParams.TutorialState,
-                buildingInitiatorsParams.ViewportLayerController,
-                new UnityLogger());
+                buildings: buildingInitiatorsParams.Buildings,
+                progressManager: buildingInitiatorsParams.ProgressManager,
+                entityPlacementRunner: buildingInitiatorsParams.EntityPlacementRunner,
+                buildingModules: buildingInitiatorsParams.BuildingsModules,
+                pipetteMap: buildingInitiatorsParams.PipetteMap,
+                tutorialState: (ITutorialState)buildingInitiatorsParams.TutorialState,
+                viewportLayersController: buildingInitiatorsParams.ViewportLayerController,
+                logger: new UnityLogger());
 
             IPlacementInitiator placer = buildingsCreator.CreateDefaultPlacer(BuildingDefinition);
 
             PlacementInitiatorId placementInitiatorId = placementRegistry.RegisterInitiator(
-                $"{BuildingDefinition.Id.Name}Initiator",
-                placer);
-            BuildingPlacementResult result = new(placementInitiatorId, BuildingDefinition);
+                serialId: new SerializedPlacerId($"{BuildingDefinition.Id.Name}Initiator"),
+                placementInitiator: placer);
+            BuildingPlacementResult result = new(initiatorId: placementInitiatorId, building: BuildingDefinition);
             _AfterExtensionApplied.Invoke(result);
         }
 
-        public IEvent<BuildingPlacementResult> AfterHijack => _AfterExtensionApplied;
+        public IEvent<BuildingPlacementResult> AfterHijack
+        {
+            get { return _AfterExtensionApplied; }
+        }
+
         private readonly MultiRegisterEvent<BuildingPlacementResult> _AfterExtensionApplied = new();
     }
 }

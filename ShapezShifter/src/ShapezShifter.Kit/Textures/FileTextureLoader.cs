@@ -9,7 +9,7 @@ namespace ShapezShifter.Textures
         {
             byte[] data = File.ReadAllBytes(path);
 
-            Texture2D texture = new(2, 2);
+            Texture2D texture = new(width: 2, height: 2);
             texture.LoadImage(data);
             return texture;
         }
@@ -18,9 +18,12 @@ namespace ShapezShifter.Textures
         {
             byte[] data = File.ReadAllBytes(path);
 
-            texture = new Texture2D(2, 2);
+            texture = new Texture2D(width: 2, height: 2);
             texture.LoadImage(data);
-            return Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f));
+            return Sprite.Create(
+                texture: texture,
+                rect: new Rect(x: 0, y: 0, width: texture.width, height: texture.height),
+                pivot: new Vector2(x: 0.5f, y: 0.5f));
         }
     }
 }

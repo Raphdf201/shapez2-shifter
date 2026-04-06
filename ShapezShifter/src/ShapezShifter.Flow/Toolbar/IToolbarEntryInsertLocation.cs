@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using Core.Collections.Scoped;
 using UnityEngine;
@@ -13,18 +12,15 @@ namespace ShapezShifter.Flow.Toolbar
 
     public static class ToolbarEntryLocation
     {
-        public static IToolbarEntryInsertLocation InsertBefore(
-            this IToolbarElementLocator elementLocator)
+        public static IToolbarEntryInsertLocation InsertBefore(this IToolbarElementLocator elementLocator)
         {
             return new Before(elementLocator);
         }
 
-        public static IToolbarEntryInsertLocation InsertAfter(
-            this IToolbarElementLocator elementLocator)
+        public static IToolbarEntryInsertLocation InsertAfter(this IToolbarElementLocator elementLocator)
         {
             return new After(elementLocator);
         }
-
 
         private class Before : IToolbarEntryInsertLocation
         {
@@ -35,8 +31,7 @@ namespace ShapezShifter.Flow.Toolbar
                 ElementLocator = elementLocator;
             }
 
-            void IToolbarEntryInsertLocation.AddEntry(ToolbarData toolbarData,
-                IToolbarElementData elementData)
+            void IToolbarEntryInsertLocation.AddEntry(ToolbarData toolbarData, IToolbarElementData elementData)
             {
                 IParentToolbarElementData parent = ElementLocator.FindElementParent(toolbarData);
                 Index relativeIndex = ElementLocator.LeafIndex();
@@ -45,7 +40,7 @@ namespace ShapezShifter.Flow.Toolbar
                     ? parent.Children.Count() - relativeIndex.Value
                     : relativeIndex.Value;
 
-                parent.InsertAtIndex(elementData, absoluteIndex);
+                parent.InsertAtIndex(element: elementData, index: absoluteIndex);
             }
 
             public override string ToString()
@@ -63,8 +58,7 @@ namespace ShapezShifter.Flow.Toolbar
                 ElementLocator = elementLocator;
             }
 
-            void IToolbarEntryInsertLocation.AddEntry(ToolbarData toolbarData,
-                IToolbarElementData elementData)
+            void IToolbarEntryInsertLocation.AddEntry(ToolbarData toolbarData, IToolbarElementData elementData)
             {
                 IParentToolbarElementData parent = ElementLocator.FindElementParent(toolbarData);
                 Index relativeIndex = ElementLocator.LeafIndex();
@@ -76,7 +70,7 @@ namespace ShapezShifter.Flow.Toolbar
                 absoluteIndex++;
 
                 Debug.Log("Inserting");
-                parent.InsertAtIndex(elementData, absoluteIndex);
+                parent.InsertAtIndex(element: elementData, index: absoluteIndex);
             }
 
             public override string ToString()
@@ -89,21 +83,20 @@ namespace ShapezShifter.Flow.Toolbar
     public static class ToolbarEntryExtensions
     {
         public static IParentToolbarElementData FindElementParent(
-            this IToolbarElementLocator elementLocator, ToolbarData toolbarData)
+            this IToolbarElementLocator elementLocator,
+            ToolbarData toolbarData)
         {
             int depth = elementLocator.Depth();
 
             IParentToolbarElementData lastParent = toolbarData.RootToolbarElement;
 
-            using ScopedList<NavigatedToolbarElement> navigatedParents =
-                ScopedList<NavigatedToolbarElement>.Get();
+            using var navigatedParents = ScopedList<NavigatedToolbarElement>.Get();
 
-            navigatedParents.Add(new NavigatedToolbarElement(0, lastParent));
+            navigatedParents.Add(new NavigatedToolbarElement(index: 0, parentToolbarElement: lastParent));
             for (int i = 0; i < depth - 1; i++)
             {
                 Index relativeIndex = elementLocator.IndexAtLevel(i);
-                IEnumerable<IToolbarElementData> children =
-                    lastParent.Children.Where(x => x is not ToolbarSlotSeparator);
+                var children = lastParent.Children.Where(x => x is not ToolbarSlotSeparator);
                 try
                 {
                     if (!relativeIndex.IsFromEnd)
@@ -112,17 +105,20 @@ namespace ShapezShifter.Flow.Toolbar
                     }
                     else
                     {
-                        lastParent = (IParentToolbarElementData)
-                            lastParent.Children.Reverse()
-                               .Where(x => x is not ToolbarSlotSeparator)
-                               .ElementAt(relativeIndex.Value - 1);
+                        lastParent = (IParentToolbarElementData)lastParent.Children.Reverse()
+                                                                          .Where(x => x is not ToolbarSlotSeparator)
+                                                                          .ElementAt(relativeIndex.Value - 1);
                     }
 
-                    navigatedParents.Add(new NavigatedToolbarElement(relativeIndex, lastParent));
+                    navigatedParents.Add(
+                        new NavigatedToolbarElement(index: relativeIndex, parentToolbarElement: lastParent));
                 }
                 catch (Exception e)
                 {
-                    throw ToolbarQueryExceptionUtils.CreateDetailedException(navigatedParents, relativeIndex, e);
+                    throw ToolbarQueryExceptionUtils.CreateDetailedException(
+                        route: navigatedParents,
+                        failedIndex: relativeIndex,
+                        innerException: e);
                 }
             }
 
@@ -130,15 +126,13 @@ namespace ShapezShifter.Flow.Toolbar
         }
     }
 
-
     public static class ToolbarInsertLocationExtensions
     {
-        public static void InsertAtIndex(this IParentToolbarElementData parent,
-            IToolbarElementData element, int index)
+        public static void InsertAtIndex(this IParentToolbarElementData parent, IToolbarElementData element, int index)
         {
-            using ScopedList<IToolbarElementData> childrenList = ScopedList<IToolbarElementData>.Get(parent.Children);
-            childrenList.Insert(index, element);
-            IToolbarElementData[] newChildren = childrenList.ToArray();
+            using var childrenList = ScopedList<IToolbarElementData>.Get(parent.Children);
+            childrenList.Insert(index: index, item: element);
+            var newChildren = childrenList.ToArray();
 
             switch (parent)
             {

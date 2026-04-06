@@ -22,40 +22,31 @@ namespace ShapezShifter.Hijack
             RewirerProvider = rewirerProvider;
 
             ShapeBuildingsRegisterPlacersHook =
-                CreateBuildingDetour<ShapeBuildingsPlacersCreator,
-                    IShapeBuildingPlacementRewirers>();
+                CreateBuildingDetour<ShapeBuildingsPlacersCreator, IShapeBuildingPlacementRewirers>();
 
             FluidBuildingsRegisterPlacersHook =
-                CreateBuildingDetour<FluidBuildingsPlacersCreator,
-                    IFluidBuildingPlacementRewirers>();
+                CreateBuildingDetour<FluidBuildingsPlacersCreator, IFluidBuildingPlacementRewirers>();
 
             SignalBuildingsRegisterPlacersHook =
-                CreateBuildingDetour<SignalBuildingsPlacersCreator,
-                    ISignalBuildingPlacementRewirers>();
+                CreateBuildingDetour<SignalBuildingsPlacersCreator, ISignalBuildingPlacementRewirers>();
 
             DecorationsBuildingsRegisterPlacersHook =
-                CreateBuildingDetour<DecorationBuildingsPlacersCreator,
-                    IDecorationBuildingPlacementRewirers>();
+                CreateBuildingDetour<DecorationBuildingsPlacersCreator, IDecorationBuildingPlacementRewirers>();
 
             SandboxBuildingsRegisterPlacersHook =
-                CreateBuildingDetour<SandboxBuildingsPlacersCreator,
-                    ISandboxBuildingPlacementRewirers>();
+                CreateBuildingDetour<SandboxBuildingsPlacersCreator, ISandboxBuildingPlacementRewirers>();
 
             SandboxBuildingsRegisterPlacersHook =
-                CreateBuildingDetour<SandboxBuildingsPlacersCreator,
-                    ISandboxBuildingPlacementRewirers>();
+                CreateBuildingDetour<SandboxBuildingsPlacersCreator, ISandboxBuildingPlacementRewirers>();
 
             PlatformIslandsRegisterPlacersHook =
-                CreateIslandDetour<PlatformIslandsPlacersCreators,
-                    IPlatformIslandPlacementRewirers>();
+                CreateIslandDetour<PlatformIslandsPlacersCreators, IPlatformIslandPlacementRewirers>();
 
             TrainIslandsRegisterPlacersHook =
-                CreateIslandDetour<TrainIslandsPlacersCreators,
-                    ITrainIslandPlacementRewirers>();
+                CreateIslandDetour<TrainIslandsPlacersCreators, ITrainIslandPlacementRewirers>();
 
             ConverterIslandsRegisterPlacersHook =
-                CreateIslandDetour<ConverterIslandsPlacersCreators,
-                    IConverterIslandPlacementRewirers>();
+                CreateIslandDetour<ConverterIslandsPlacersCreators, IConverterIslandPlacementRewirers>();
 
             return;
 
@@ -64,10 +55,9 @@ namespace ShapezShifter.Hijack
                 where TRewirer : IBuildingPlacementRewirers
             {
                 return DetourHelper
-                   .CreatePostfixHook<TCreator, IPlacementInitiatorIdRegistry,
-                        ICollection<IDisposable>>((creator, registry, disposables) =>
-                            creator.RegisterPlacers(registry, disposables),
-                        RegisterBuildingPlacers<TCreator, TRewirer>);
+                   .CreatePostfixHook<TCreator, IPlacementInitiatorIdRegistry, ICollection<IDisposable>>(
+                        original: (creator, registry, disposables) => creator.RegisterPlacers(registry, disposables),
+                        postfix: RegisterBuildingPlacers<TCreator, TRewirer>);
             }
 
             Hook CreateIslandDetour<TCreator, TRewirer>()
@@ -75,38 +65,41 @@ namespace ShapezShifter.Hijack
                 where TRewirer : IIslandPlacementRewirers
             {
                 return DetourHelper
-                   .CreatePostfixHook<TCreator, IPlacementInitiatorIdRegistry,
-                        ICollection<IDisposable>>((creator, registry, disposables) =>
-                            creator.RegisterPlacers(registry, disposables),
-                        RegisterIslandPlacers<TCreator, TRewirer>);
+                   .CreatePostfixHook<TCreator, IPlacementInitiatorIdRegistry, ICollection<IDisposable>>(
+                        original: (creator, registry, disposables) => creator.RegisterPlacers(registry, disposables),
+                        postfix: RegisterIslandPlacers<TCreator, TRewirer>);
             }
         }
 
-        private void RegisterBuildingPlacers<TCreator, TRewirer>(TCreator creator,
+        private void RegisterBuildingPlacers<TCreator, TRewirer>(
+            TCreator creator,
             IPlacementInitiatorIdRegistry initiatorIdRegistry,
             ICollection<IDisposable> disposables)
             where TCreator : BuildingPlacersCreator
             where TRewirer : IBuildingPlacementRewirers
         {
-            IEnumerable<TRewirer> initiatorsRewirers = RewirerProvider.RewirersOfType<TRewirer>();
+            var initiatorsRewirers = RewirerProvider.RewirersOfType<TRewirer>();
             BuildingInitiatorsParams @params = new(creator);
             foreach (TRewirer initiatorsRewirer in initiatorsRewirers)
             {
-                initiatorsRewirer.ModifyBuildingPlacers(@params, initiatorIdRegistry);
+                initiatorsRewirer.ModifyBuildingPlacers(@params: @params, placementRegistry: initiatorIdRegistry);
             }
         }
 
-        private void RegisterIslandPlacers<TCreator, TRewirer>(TCreator creator,
+        private void RegisterIslandPlacers<TCreator, TRewirer>(
+            TCreator creator,
             IPlacementInitiatorIdRegistry initiatorIdRegistry,
             ICollection<IDisposable> disposables)
             where TCreator : IslandPlacersCreator
             where TRewirer : IIslandPlacementRewirers
         {
-            IEnumerable<TRewirer> initiatorsRewirers = RewirerProvider.RewirersOfType<TRewirer>();
-            IslandInitiatorsParams @params = new(creator, 3);
+            var initiatorsRewirers = RewirerProvider.RewirersOfType<TRewirer>();
+            IslandInitiatorsParams @params = new(placersCreator: creator, maxBuildingLayer: 3);
             foreach (TRewirer initiatorsRewirer in initiatorsRewirers)
             {
-                initiatorsRewirer.ModifyIslandPlacers(@params, initiatorIdRegistry);
+                initiatorsRewirer.ModifyIslandPlacers(
+                    islandInitiatorsParams: @params,
+                    placementRegistry: initiatorIdRegistry);
             }
         }
 

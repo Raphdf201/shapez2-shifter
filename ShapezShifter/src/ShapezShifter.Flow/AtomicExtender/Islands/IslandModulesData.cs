@@ -10,12 +10,7 @@ namespace ShapezShifter.Flow.Atomic
         }
     }
 
-    public class NoModulesData : IIslandModulesData
-    {
-    }
+    public class NoModulesData : IIslandModulesData { }
 
-
-    public interface IIslandModulesData
-    {
-    }
+    public interface IIslandModulesData { }
 }

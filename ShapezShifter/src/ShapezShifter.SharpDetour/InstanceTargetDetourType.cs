@@ -17,8 +17,7 @@ namespace ShapezShifter.SharpDetour
             return new HookVoidMethodSignaturePromise<TObject, TArg0, TArg1>();
         }
 
-        public HookVoidMethodSignaturePromise<TObject, TArg0, TArg1, TArg2> WithArgs<TArg0, TArg1,
-            TArg2>()
+        public HookVoidMethodSignaturePromise<TObject, TArg0, TArg1, TArg2> WithArgs<TArg0, TArg1, TArg2>()
         {
             return new HookVoidMethodSignaturePromise<TObject, TArg0, TArg1, TArg2>();
         }
@@ -62,8 +61,7 @@ namespace ShapezShifter.SharpDetour
             return new HookVoidMethodSignaturePromise<TObject, TArg0, TArg1, TArg2, TArg3>();
         }
 
-        public HookMethodSignaturePromise<TObject, TArg0, TArg1, TArg2, TResult>
-            Returning<TResult>()
+        public HookMethodSignaturePromise<TObject, TArg0, TArg1, TArg2, TResult> Returning<TResult>()
         {
             return new HookMethodSignaturePromise<TObject, TArg0, TArg1, TArg2, TResult>();
         }
@@ -71,8 +69,7 @@ namespace ShapezShifter.SharpDetour
 
     public readonly struct HookVoidMethodSignaturePromise<TObject, TArg0, TArg1, TArg2, TArg3>
     {
-        public HookMethodSignaturePromise<TObject, TArg0, TArg1, TArg2, TArg3, TResult>
-            Returning<TResult>()
+        public HookMethodSignaturePromise<TObject, TArg0, TArg1, TArg2, TArg3, TResult> Returning<TResult>()
         {
             return new HookMethodSignaturePromise<TObject, TArg0, TArg1, TArg2, TArg3, TResult>();
         }
@@ -110,16 +107,13 @@ namespace ShapezShifter.SharpDetour
 
     public readonly struct HookMethodSignaturePromise<TObject, TArg0, TArg1, TArg2, TResult>
     {
-        public HookMethodSignaturePromise<TObject, TArg0, TArg1, TArg2, TArg3, TResult>
-            WithArg<TArg3>()
+        public HookMethodSignaturePromise<TObject, TArg0, TArg1, TArg2, TArg3, TResult> WithArg<TArg3>()
         {
             return new HookMethodSignaturePromise<TObject, TArg0, TArg1, TArg2, TArg3, TResult>();
         }
     }
 
-    public readonly struct HookMethodSignaturePromise<TObject, TArg0, TArg1, TArg2, TArg3, TResult>
-    {
-    }
+    public readonly struct HookMethodSignaturePromise<TObject, TArg0, TArg1, TArg2, TArg3, TResult> { }
 
     public readonly struct HookMethodSignatureTarget<TObject, TArg0, TArg1, TResult>
     {
@@ -134,7 +128,7 @@ namespace ShapezShifter.SharpDetour
 
         public Hook Postfix(Func<TObject, TArg0, TArg1, TResult, TResult> postfix)
         {
-            return DetourHelper.CreatePostfixHook(Original, postfix);
+            return DetourHelper.CreatePostfixHook(original: Original, postfix: postfix);
         }
     }
 }

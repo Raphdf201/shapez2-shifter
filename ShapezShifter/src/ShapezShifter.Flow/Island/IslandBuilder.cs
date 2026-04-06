@@ -1,18 +1,22 @@
 using System.Collections.Generic;
+using System.Linq;
+using Core.Collections;
 using Core.Factory;
 using Game.Core.Coordinates;
 using Game.Core.Rendering.Islands.PlayingField;
 using Game.Core.Research;
+using Unity.Mathematics;
 
 namespace ShapezShifter.Flow
 {
-    internal class IslandBuilder :
-        IIslandBuilder,
-        IIdentifiableIslandBuilder,
-        IIdentifiableMappableIslandBuilder,
-        IIdentifiableMappableConnectableIslandBuilder,
-        IIdentifiableMappableConnectableInteractableIslandBuilder,
-        IIdentifiableMappableConnectableInteractableCostingIslandBuilder
+    internal class IslandBuilder
+        : IIslandBuilder,
+          IIdentifiableIslandBuilder,
+          IIdentifiableCollidableIslandBuilder,
+          IIdentifiableMappableIslandBuilder,
+          IIdentifiableMappableConnectableIslandBuilder,
+          IIdentifiableMappableConnectableInteractableIslandBuilder,
+          IIdentifiableMappableConnectableInteractableCostingIslandBuilder
     {
         private readonly IslandDefinitionId DefinitionId;
         private ChunkLayoutLookup<ChunkVector, IslandChunkData> Layout;
@@ -24,45 +28,98 @@ namespace ShapezShifter.Flow
             DefinitionId = id;
         }
 
-        public IIdentifiableMappableIslandBuilder WithLayout(ChunkLayoutLookup<ChunkVector, IslandChunkData> layout)
+        public IIdentifiableCollidableIslandBuilder WithLayout(ChunkLayoutLookup<ChunkVector, IslandChunkData> layout)
         {
             Layout = layout;
-            IslandDefinition = new IslandDefinition(DefinitionId, Layout);
+            IslandDefinition = new IslandDefinition(id: DefinitionId, layout: Layout);
             IslandDefinition.CustomData.Attach(new LambdaFactory<IIslandConfiguration>(() => null));
 
             return this;
         }
 
-        public IIdentifiableMappableConnectableIslandBuilder WithConnectorData(
-            IIslandConnectorData connectorData)
+        public IIdentifiableMappableIslandBuilder WithPerChunkColliders()
+        {
+            var chunks = IslandDefinition.Layout.GetChunkPositions();
+
+            var colliders = new List<CollisionBox>();
+            foreach (ChunkVector coordinate in chunks)
+            {
+                LocalVector center = new LocalVector(x: coordinate.x, y: coordinate.y, z: coordinate.z)
+                                     * CoordinateConstants.TilesPerIslandLayer;
+                var dimensions = new LocalDimension(
+                    x: CoordinateConstants.TilesPerIslandLayer,
+                    y: CoordinateConstants.TilesPerIslandLayer,
+                    z: CoordinateConstants.TilesPerIslandLayer);
+                colliders.Add(new CollisionBox(center_L: center, dimensions_L: dimensions));
+            }
+
+            IslandDefinition.CustomData.Attach(new IslandCollisionData(colliders));
+            return this;
+        }
+
+        public IIdentifiableMappableIslandBuilder WithBoundingCollider()
+        {
+            var chunks = IslandDefinition.Layout.GetChunkPositions();
+
+            var min = new LocalVector(x: float.MaxValue, y: float.MaxValue, z: float.MaxValue);
+            var max = new LocalVector(x: float.MinValue, y: float.MinValue, z: float.MinValue);
+            foreach (ChunkVector coordinate in chunks)
+            {
+                min = new LocalVector(
+                    x: math.min(x: min.x, y: coordinate.x),
+                    y: math.min(x: min.y, y: coordinate.y),
+                    z: (short)math.min(x: min.z, y: coordinate.z));
+                max = new LocalVector(
+                    x: math.max(x: max.x, y: coordinate.x),
+                    y: math.max(x: max.y, y: coordinate.y),
+                    z: (short)math.max(x: max.z, y: coordinate.z));
+            }
+
+            min *= CoordinateConstants.TilesPerIslandLayer;
+            max *= CoordinateConstants.TilesPerIslandLayer;
+
+            LocalVector center = (min + max) * 0.5f;
+            var dimensions = new LocalDimension((max - min).xyz);
+            IslandDefinition.CustomData.Attach(
+                new IslandCollisionData(
+                    new CollisionBox(center_L: center, dimensions_L: dimensions).AsEnumerable().ToList()));
+            return this;
+        }
+
+        public IIdentifiableMappableIslandBuilder WithCustomCollider(IEnumerable<CollisionBox> collisionBoxes)
+        {
+            IslandDefinition.CustomData.Attach(new IslandCollisionData(collisionBoxes.ToList()));
+            return this;
+        }
+
+        public IIdentifiableMappableConnectableIslandBuilder WithConnectorData(IIslandConnectorData connectorData)
         {
             IslandDefinition.CustomData.Attach(connectorData);
             return this;
         }
 
-        public IslandDefinition BuildAndRegister(IslandDefinitionGroup islandGroup,
-            GameIslands gameIslands)
+        public IslandDefinition BuildAndRegister(IslandDefinitionGroup islandGroup, GameIslands gameIslands)
         {
-            BindGroupToIsland(IslandDefinition, islandGroup);
-            BindIslandToGroup(islandGroup, IslandDefinition);
+            BindGroupToIsland(island: IslandDefinition, group: islandGroup);
+            BindIslandToGroup(group: islandGroup, island: IslandDefinition);
 
-            gameIslands.AllDefinitions.Add(IslandDefinition);
-            gameIslands.DefinitionsById.Add(IslandDefinition.Id, IslandDefinition);
+            ((List<IIslandDefinition>)gameIslands.AllDefinitions).Add(IslandDefinition);
+            gameIslands.DefinitionsById.Add(key: IslandDefinition.Id, value: IslandDefinition);
 
             return IslandDefinition;
         }
 
         private static void BindGroupToIsland(IslandDefinition island, IslandDefinitionGroup group)
         {
-            IPresentationData groupPresentationData = group.CustomData.Get<IPresentationData>();
-            IslandPresentationData islandPresentationData = new(groupPresentationData.Title,
-                groupPresentationData.Description,
-                WikiEntryId.Empty,
-                groupPresentationData.Icon,
-                groupPresentationData.ShowAsReward,
-                false,
-                UnlockableStoreContentId.Empty);
-
+            var groupPresentationData = group.CustomData.Get<IPresentationData>();
+            IslandPresentationData islandPresentationData = new(
+                title: groupPresentationData.Title,
+                description: groupPresentationData.Description,
+                wikiEntryId: WikiEntryId.Empty,
+                icon: groupPresentationData.Icon,
+                showAsReward: groupPresentationData.ShowAsReward,
+                isLockedByStoreContent: false,
+                storeContentId: UnlockableStoreContentId.Empty);
 
             island.CustomData.AttachOrReplace(islandPresentationData);
             island.CustomData.AttachOrReplace(group);
@@ -78,7 +135,6 @@ namespace ShapezShifter.Flow
             group.CustomData.AttachOrReplace(groupCollection);
         }
 
-
         public IIdentifiableMappableConnectableInteractableIslandBuilder WithInteraction(
             bool flippable,
             bool canHoldBuildings,
@@ -86,12 +142,20 @@ namespace ShapezShifter.Flow
             bool skipReplacementConnectorChecks = false,
             bool isTransportBuilding = false,
             bool selectable = true,
-            bool buildable = true)
+            bool buildable = true,
+            bool removable = true)
         {
-            IslandDefinition.CustomData.Attach(new IslandInteractionConfig(selectable, buildable, flippable));
-            IslandDefinition.CustomData.Attach(new EntityReplacementPreferenceData(allowNonForcingReplacement,
-                isTransportBuilding,
-                skipReplacementConnectorChecks));
+            IslandDefinition.CustomData.Attach(
+                new IslandInteractionConfig(
+                    flippable: flippable,
+                    selectable: selectable,
+                    playerBuildable: buildable,
+                    removable: removable));
+            IslandDefinition.CustomData.Attach(
+                new EntityReplacementPreferenceData(
+                    allowNonForcingReplacementByEntitiesInDifferentGroup: allowNonForcingReplacement,
+                    isTransportBuilding: isTransportBuilding,
+                    shouldSkipReplacementIOChecks: skipReplacementConnectorChecks));
 
             if (canHoldBuildings)
             {
@@ -110,18 +174,19 @@ namespace ShapezShifter.Flow
 
         public IIdentifiableMappableConnectableInteractableCostingIslandBuilder WithDefaultChunkCost()
         {
-            int chunks = IslandDefinition.Layout.ChunkPositions.Length;
+            int chunks = IslandDefinition.Layout.GetChunkPositions().Count;
             const int costPerChunk = 1;
             return WithCustomChunkCost(new ChunkLimitCurrency(chunks * costPerChunk));
         }
 
-        public IIslandBuilder WithRenderingOptions(IChunkDrawingContextProvider drawingContextProvider,
+        public IIslandBuilder WithRenderingOptions(
+            IChunkDrawingContextProvider drawingContextProvider,
             bool drawPlayingField)
         {
             var dictionary = new Dictionary<ChunkVector, ChunkPlatformDrawingContext>();
-            foreach (ChunkVector chunkVector in IslandDefinition.Layout.ChunkPositions)
+            foreach (ChunkVector chunkVector in IslandDefinition.Layout.GetChunkPositions())
             {
-                dictionary.Add(chunkVector, drawingContextProvider.DrawingContextForChunk(chunkVector));
+                dictionary.Add(key: chunkVector, value: drawingContextProvider.DrawingContextForChunk(chunkVector));
             }
 
             IslandDefinition.CustomData.Attach(new IslandFrameDrawData(dictionary));
@@ -136,24 +201,34 @@ namespace ShapezShifter.Flow
 
     public interface IIdentifiableIslandBuilder
     {
-        IIdentifiableMappableIslandBuilder WithLayout(ChunkLayoutLookup<ChunkVector, IslandChunkData> layout);
+        IIdentifiableCollidableIslandBuilder WithLayout(ChunkLayoutLookup<ChunkVector, IslandChunkData> layout);
+    }
+
+    public interface IIdentifiableCollidableIslandBuilder
+    {
+        IIdentifiableMappableIslandBuilder WithPerChunkColliders();
+
+        IIdentifiableMappableIslandBuilder WithBoundingCollider();
+
+        IIdentifiableMappableIslandBuilder WithCustomCollider(IEnumerable<CollisionBox> collisionBoxes);
     }
 
     public interface IIdentifiableMappableIslandBuilder
     {
-        IIdentifiableMappableConnectableIslandBuilder WithConnectorData(
-            IIslandConnectorData connectorData);
+        IIdentifiableMappableConnectableIslandBuilder WithConnectorData(IIslandConnectorData connectorData);
     }
 
     public interface IIdentifiableMappableConnectableIslandBuilder
     {
-        IIdentifiableMappableConnectableInteractableIslandBuilder WithInteraction(bool flippable,
+        IIdentifiableMappableConnectableInteractableIslandBuilder WithInteraction(
+            bool flippable,
             bool canHoldBuildings,
             bool allowNonForcingReplacement = false,
             bool skipReplacementConnectorChecks = false,
             bool isTransportBuilding = false,
             bool selectable = true,
-            bool buildable = true);
+            bool buildable = true,
+            bool removable = true);
     }
 
     public interface IIdentifiableMappableConnectableInteractableIslandBuilder

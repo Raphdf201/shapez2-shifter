@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using MonoMod.RuntimeDetour;
 using ShapezShifter.SharpDetour;
 
@@ -13,16 +12,15 @@ namespace ShapezShifter.Hijack
         public BuildingModulesInterceptor(IRewirerProvider rewirerProvider)
         {
             RewirerProvider = rewirerProvider;
-            InjectBuildingsModuleProvidersHook = DetourHelper
-               .CreatePostfixHook<GameSessionOrchestrator, BuildingsModulesLookup>((core, lookup) =>
-                        core.InjectBuildingsModuleProviders(lookup),
-                    Postfix);
+            InjectBuildingsModuleProvidersHook =
+                DetourHelper.CreatePostfixHook<GameSessionOrchestrator, BuildingsModulesLookup>(
+                    original: (core, lookup) => core.InjectBuildingsModuleProviders(lookup),
+                    postfix: Postfix);
         }
 
         private void Postfix(GameSessionOrchestrator gameCore, BuildingsModulesLookup modulesLookup)
         {
-            IEnumerable<IBuildingModulesRewirer> buildingModulesRewirers =
-                RewirerProvider.RewirersOfType<IBuildingModulesRewirer>();
+            var buildingModulesRewirers = RewirerProvider.RewirersOfType<IBuildingModulesRewirer>();
 
             foreach (IBuildingModulesRewirer buildingModulesRewirer in buildingModulesRewirers)
             {

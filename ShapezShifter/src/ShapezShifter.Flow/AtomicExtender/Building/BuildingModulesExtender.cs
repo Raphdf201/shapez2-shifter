@@ -9,32 +9,41 @@ namespace ShapezShifter.Flow.Atomic
         private readonly IBuildingDefinition BuildingDefinition;
         private readonly IBuildingModulesData Data;
 
-        public BuildingModulesExtender(IBuildingDefinition buildingDefinition,
-            IBuildingModulesData data)
+        public BuildingModulesExtender(IBuildingDefinition buildingDefinition, IBuildingModulesData data)
         {
             BuildingDefinition = buildingDefinition;
             Data = data;
         }
 
-        public IEvent AfterHijack => _AfterExtensionApplied;
+        public IEvent AfterHijack
+        {
+            get { return _AfterExtensionApplied; }
+        }
 
-        private readonly MultiRegisterEvent _AfterExtensionApplied =
-            new();
+        private readonly MultiRegisterEvent _AfterExtensionApplied = new();
 
         public void AddModules(BuildingsModulesLookup modulesLookup)
         {
             IBuildingModules buildingModules = Data switch
             {
-                BuildingModulesData processingModulesData => new
-                    ItemSimulationBuildingModuleDataProvider(
-                        processingModulesData.SpeedId,
-                        processingModulesData.InitialProcessingDuration),
+                BuildingModulesData processingModulesData => new ItemSimulationBuildingModuleDataProvider(
+                    beltSpeed: GetBeltBuildingSpeedId(),
+                    beltBuildingSpeed: processingModulesData.SpeedId,
+                    beltBuildingDuration: processingModulesData.InitialProcessingDuration),
                 CustomBuildingsModulesData customModulesData => customModulesData.Modules,
                 _ => throw new Exception()
             };
 
-            modulesLookup.AddModule(BuildingDefinition.Id, BuildingDefinition, buildingModules);
+            modulesLookup.AddModule(
+                variant: BuildingDefinition.Id,
+                buildingSimulationData: BuildingDefinition,
+                buildingModulesProvider: buildingModules);
             _AfterExtensionApplied.Invoke();
+        }
+
+        private ResearchSpeedId GetBeltBuildingSpeedId()
+        {
+            return new ResearchSpeedId("BeltSpeed");
         }
     }
 }

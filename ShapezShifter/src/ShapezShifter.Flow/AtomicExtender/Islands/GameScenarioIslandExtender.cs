@@ -10,8 +10,10 @@ namespace ShapezShifter.Flow.Atomic
         private readonly IIslandResearchProgressionExtender ProgressionExtender;
         private readonly IslandDefinitionGroupId GroupId;
 
-        public GameScenarioIslandExtender(ScenarioSelector scenarioFilter,
-            IIslandResearchProgressionExtender progressionExtender, IslandDefinitionGroupId groupId)
+        public GameScenarioIslandExtender(
+            ScenarioSelector scenarioFilter,
+            IIslandResearchProgressionExtender progressionExtender,
+            IslandDefinitionGroupId groupId)
         {
             ScenarioFilter = scenarioFilter;
             ProgressionExtender = progressionExtender;
@@ -25,12 +27,19 @@ namespace ShapezShifter.Flow.Atomic
                 return gameScenario;
             }
 
-            ProgressionExtender.ExtendResearch(gameScenario.UniqueId, gameScenario.Progression, GroupId);
+            ProgressionExtender.ExtendResearch(
+                scenarioId: gameScenario.UniqueId,
+                researchProgression: gameScenario.Progression,
+                groupId: GroupId);
             _AfterExtensionApplied.Invoke();
             return gameScenario;
         }
 
-        public IEvent AfterHijack => _AfterExtensionApplied;
+        public IEvent AfterHijack
+        {
+            get { return _AfterExtensionApplied; }
+        }
+
         private readonly MultiRegisterEvent _AfterExtensionApplied = new();
     }
 }

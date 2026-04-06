@@ -4,8 +4,8 @@ namespace ShapezShifter.Flow
 {
     public class ToolbarQueryException : Exception
     {
-        public ToolbarQueryException(string message, Exception innerException) : base(message, innerException)
-        {
-        }
+        public ToolbarQueryException(string message, Exception innerException) : base(
+            message: message,
+            innerException: innerException) { }
     }
 }

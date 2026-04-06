@@ -3,58 +3,56 @@ using ShapezShifter.Hijack;
 
 namespace ShapezShifter.Flow
 {
-    public class ModSaveData<T> : ISaveDataRewirer where T : class, new()
+    public class ModSaveData<T> : ISaveDataRewirer
+        where T : class, new()
     {
         private readonly string FileName;
-        private T _data;
 
-        public T Data
-        {
-            get => _data;
-            set => _data = value;
-        }
+        public T Data { get; set; }
 
         private Action<T> _onDataLoaded;
+
         public event Action<T> OnDataLoaded
         {
-            add => _onDataLoaded += value;
-            remove => _onDataLoaded -= value;
+            add { _onDataLoaded += value; }
+            remove { _onDataLoaded -= value; }
         }
 
         private Action<T> _onDataSaving;
+
         public event Action<T> OnDataSaving
         {
-            add => _onDataSaving += value;
-            remove => _onDataSaving -= value;
+            add { _onDataSaving += value; }
+            remove { _onDataSaving -= value; }
         }
 
         private ModSaveData(string fileName, T defaultData = null)
         {
             if (string.IsNullOrWhiteSpace(fileName))
             {
-                throw new ArgumentException("Filename cannot be null or empty", nameof(fileName));
+                throw new ArgumentException(message: "Filename cannot be null or empty", paramName: nameof(fileName));
             }
 
-            if (!fileName.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
+            if (!fileName.EndsWith(value: ".json", comparisonType: StringComparison.OrdinalIgnoreCase))
             {
                 fileName += ".json";
             }
 
             FileName = fileName;
-            _data = defaultData ?? new T();
+            Data = defaultData ?? new T();
         }
 
         public void Reset(T defaultData = null)
         {
-            _data = defaultData ?? new T();
+            Data = defaultData ?? new T();
         }
 
         void ISaveDataRewirer.OnSave(ISavegameBlobWriter writer)
         {
             try
             {
-                _onDataSaving?.Invoke(_data);
-                writer.WriteObjectAsJson(FileName, _data);
+                _onDataSaving?.Invoke(Data);
+                writer.WriteObjectAsJson(filename: FileName, obj: Data);
             }
             catch (Exception ex)
             {
@@ -66,20 +64,20 @@ namespace ShapezShifter.Flow
         {
             try
             {
-                _data = reader.ReadObjectFromJson<T>(FileName);
-                _onDataLoaded?.Invoke(_data);
+                Data = reader.ReadObjectFromJson<T>(FileName);
+                _onDataLoaded?.Invoke(Data);
             }
             catch (Exception)
             {
-                _data = new T();
+                Data = new T();
                 Debugging.Logger?.Info?.Log($"No existing save data found for {FileName}, using defaults");
             }
         }
 
         internal static (ModSaveData<T>, RewirerHandle) Register(string fileName, T defaultData = null)
         {
-            var obj = new ModSaveData<T>(fileName, defaultData);
-            var handle = GameRewirers.AddRewirer(obj);
+            var obj = new ModSaveData<T>(fileName: fileName, defaultData: defaultData);
+            RewirerHandle handle = GameRewirers.AddRewirer(obj);
             return (obj, handle);
         }
     }

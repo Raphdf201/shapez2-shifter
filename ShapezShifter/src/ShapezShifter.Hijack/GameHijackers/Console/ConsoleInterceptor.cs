@@ -1,10 +1,10 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using Core.Logging;
 using MonoMod.RuntimeDetour;
 using ShapezShifter.SharpDetour;
 
-#nullable enable
 namespace ShapezShifter.Hijack
 {
     internal class ConsoleInterceptor : IDisposable
@@ -17,20 +17,18 @@ namespace ShapezShifter.Hijack
         {
             RewirerProvider = rewirerProvider;
             Logger = logger;
-            ConsoleCommandsHook = DetourHelper
-                .CreatePostfixHook<GameSessionOrchestrator, IGameData>(
-                    (orchestrator, gameData) => orchestrator.Init_9_ConsoleCommands(gameData),
-                    SetupConsoleCommands);
+            ConsoleCommandsHook = DetourHelper.CreatePostfixHook<GameSessionOrchestrator, IGameData, GlobalsData>(
+                original: (orchestrator, gameData, globals) => orchestrator.Init_9_ConsoleCommands(gameData, globals),
+                postfix: SetupConsoleCommands);
         }
 
-        private void SetupConsoleCommands(GameSessionOrchestrator orchestrator, IGameData gameData)
+        private void SetupConsoleCommands(GameSessionOrchestrator orchestrator, IGameData gameData, GlobalsData globals)
         {
-            IDebugConsole console = orchestrator.DependencyContainer.Resolve<IDebugConsole>();
+            var console = orchestrator.DependencyContainer.Resolve<IDebugConsole>();
 
-            IEnumerable<IConsoleRewirer> consoleRewirers = 
-                RewirerProvider.RewirersOfType<IConsoleRewirer>();
+            IEnumerable<IConsoleRewirer> consoleRewirers = RewirerProvider.RewirersOfType<IConsoleRewirer>();
 
-            foreach (IConsoleRewirer consoleRewirer in consoleRewirers)
+            foreach (IConsoleRewirer? consoleRewirer in consoleRewirers)
             {
                 try
                 {
@@ -38,31 +36,36 @@ namespace ShapezShifter.Hijack
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error?.Log($"Failed to register console commands from rewirer {consoleRewirer.GetType().Name}: {ex}");
+                    Logger.Error?.Log(
+                        $"Failed to register console commands from rewirer {consoleRewirer.GetType().Name}: {ex}");
                 }
             }
 
             return;
 
-            void RegisterCommand(string command, Action<DebugConsole.CommandContext> handler, bool isCheat,
-                DebugConsole.ConsoleOption? arg1, DebugConsole.ConsoleOption? arg2)
+            void RegisterCommand(
+                string command,
+                Action<DebugConsole.CommandContext> handler,
+                bool isCheat,
+                DebugConsole.ConsoleOption? arg1,
+                DebugConsole.ConsoleOption? arg2)
             {
                 Logger.Info?.Log($"Registering console command: {command}");
                 if (arg1 != null && arg2 != null)
                 {
-                    console.Register(command, arg1, arg2, handler, isCheat);
+                    console.Register(id: command, option0: arg1, option1: arg2, handler: handler, isCheat: isCheat);
                 }
                 else if (arg1 != null && arg2 == null)
                 {
-                    console.Register(command, arg1, handler, isCheat);
+                    console.Register(id: command, option0: arg1, handler: handler, isCheat: isCheat);
                 }
                 else if (arg1 == null && arg2 != null)
                 {
-                    console.Register(command, arg2, handler, isCheat);
+                    console.Register(id: command, option0: arg2, handler: handler, isCheat: isCheat);
                 }
                 else
                 {
-                    console.Register(command, handler, isCheat);
+                    console.Register(id: command, handler: handler, isCheat: isCheat);
                 }
             }
         }

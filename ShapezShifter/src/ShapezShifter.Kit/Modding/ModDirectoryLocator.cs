@@ -24,7 +24,7 @@ namespace ShapezShifter.Kit
 
         private static string GetDirectoryLocation(Type t)
         {
-            var parent = Directory.GetParent(t.Assembly.Location);
+            DirectoryInfo parent = Directory.GetParent(t.Assembly.Location);
             return parent == null ? throw new Exception("Invalid assembly location") : parent.FullName;
         }
     }
@@ -41,7 +41,7 @@ namespace ShapezShifter.Kit
         public string SubPath(string subPath)
         {
             Debugging.Logger.Info.Log($"Combining {AssemblyLocation} with {subPath}");
-            return Path.Combine(AssemblyLocation, subPath);
+            return Path.Combine(path1: AssemblyLocation, path2: subPath);
         }
 
         public ModFolderLocator SubLocator(string subPath)

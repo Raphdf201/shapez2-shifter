@@ -8,15 +8,16 @@ namespace ShapezShifter.Kit
         /// <remarks>
         /// Consider setting colliders manually for more complicated shapes or more accuracy
         /// </remarks>
-        public static BuildingCollisionBox[] CreateBasicCollider(Mesh mesh)
+        public static CollisionBox[] CreateBasicCollider(Mesh mesh)
         {
             return new[]
             {
-                new BuildingCollisionBox(new SerializedBuildingCollisionBox
-                {
-                    Center_L = new LocalVector(mesh.bounds.center),
-                    Dimensions_L = mesh.bounds.size
-                })
+                new CollisionBox(
+                    new SerializedCollisionBox
+                    {
+                        Center_L = new LocalVector(mesh.bounds.center),
+                        Dimensions_L = mesh.bounds.size
+                    })
             };
         }
     }

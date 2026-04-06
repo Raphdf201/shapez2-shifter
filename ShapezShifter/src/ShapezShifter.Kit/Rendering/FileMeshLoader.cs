@@ -17,8 +17,9 @@ namespace ShapezShifter.Kit
             LogStream logStream = new(delegate(string msg, string _) { Debugging.Logger.Info?.Log(msg); });
             logStream.Attach();
 
-            Scene scene = importer.ImportFile(file,
-                PostProcessPreset.TargetRealTimeMaximumQuality);
+            Scene scene = importer.ImportFile(
+                file: file,
+                postProcessFlags: PostProcessPreset.TargetRealTimeMaximumQuality);
 
             return AssimpToUnityMeshConverter.ConvertStaticMesh(scene.Meshes.Single());
         }

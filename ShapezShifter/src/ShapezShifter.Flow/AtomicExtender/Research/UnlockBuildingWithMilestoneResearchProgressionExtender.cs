@@ -11,10 +11,14 @@ namespace ShapezShifter.Flow.Research
             MilestoneSelector = milestoneSelector;
         }
 
-        public void ExtendResearch(string scenarioId, ResearchProgression researchProgression,
+        public void ExtendResearch(
+            ScenarioId scenarioId,
+            ResearchProgression researchProgression,
             BuildingDefinitionGroupId groupId)
         {
-            ResearchLevel level = MilestoneSelector.Select(scenarioId, researchProgression.Levels);
+            ResearchLevel level = MilestoneSelector.Select(
+                scenarioId: scenarioId,
+                milestones: researchProgression.Levels);
             level.Rewards = level.Rewards.Append(new ResearchRewardBuildingGroup(groupId)).ToList();
         }
     }

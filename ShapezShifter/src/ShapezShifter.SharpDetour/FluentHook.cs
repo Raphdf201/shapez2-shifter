@@ -17,31 +17,30 @@ namespace ShapezShifter.SharpDetour
     {
         public static void Test()
         {
-            MethodInfo original = typeof(Test).GetMethod("MultiplyAndCeilToInt",
-                                      BindingFlags.Public | BindingFlags.Instance) ??
-                                  throw new InvalidOperationException();
+            MethodInfo original = typeof(Test).GetMethod(
+                                      name: "MultiplyAndCeilToInt",
+                                      bindingAttr: BindingFlags.Public | BindingFlags.Instance)
+                                  ?? throw new InvalidOperationException();
 
-            using Hook hook = new(original,
-                typeof(FluentHookTest).GetMethod(nameof(Patch)) ??
-                throw new InvalidOperationException());
+            using Hook hook = new(
+                source: original,
+                target: typeof(FluentHookTest).GetMethod(nameof(Patch)) ?? throw new InvalidOperationException());
 
             using Hook hook2 = DetourHelper.CreatePostfixHook<Test, float, float, int>(
-                (test, f1, f2) => test.MultiplyAndCeilToInt(f1, f2),
-                AddOne);
+                original: (test, f1, f2) => test.MultiplyAndCeilToInt(f1, f2),
+                postfix: AddOne);
 
-            using Hook hook3 = FluentHook
-               .Targeting<Test>()
-               .WithArg<float>()
-               .WithArg<float>()
-               .Returning<int>()
-               .Detour((test, f1, f2) => test.MultiplyAndCeilToInt(f1, f2))
-               .Postfix(AddOne);
+            using Hook hook3 = FluentHook.Targeting<Test>()
+                                         .WithArg<float>()
+                                         .WithArg<float>()
+                                         .Returning<int>()
+                                         .Detour((test, f1, f2) => test.MultiplyAndCeilToInt(f1, f2))
+                                         .Postfix(AddOne);
 
-            int Patch(Func<Test, float, float, int> orig, Test self, float arg0,
-                float arg1)
+            int Patch(Func<Test, float, float, int> orig, Test self, float arg0, float arg1)
             {
-                int value = orig(self, arg0, arg1);
-                return AddOne(self, arg0, arg1, value);
+                int value = orig(arg1: self, arg2: arg0, arg3: arg1);
+                return AddOne(arg1: self, arg2: arg0, arg3: arg1, result: value);
             }
         }
 

@@ -5,14 +5,14 @@ namespace ShapezShifter.Flow.Research
 {
     public class ByIndexPerScenarioMilestoneSelector : IMilestoneSelector
     {
-        private readonly Func<string, Index> IndexFunc;
+        private readonly Func<ScenarioId, Index> IndexFunc;
 
-        public ByIndexPerScenarioMilestoneSelector(Func<string, Index> indexFunc)
+        public ByIndexPerScenarioMilestoneSelector(Func<ScenarioId, Index> indexFunc)
         {
             IndexFunc = indexFunc;
         }
 
-        public ResearchLevel Select(string scenarioId, IReadOnlyList<ResearchLevel> milestones)
+        public ResearchLevel Select(ScenarioId scenarioId, IReadOnlyList<ResearchLevel> milestones)
         {
             return milestones[IndexFunc.Invoke(scenarioId)];
         }

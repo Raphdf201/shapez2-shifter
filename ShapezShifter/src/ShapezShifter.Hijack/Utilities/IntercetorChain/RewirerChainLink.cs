@@ -36,13 +36,12 @@ namespace ShapezShifter.Hijack
             void AfterIntercepted(TPropagatedData propagatedData)
             {
                 OnPropagate.Unregister(AfterIntercepted);
-                IChainable<TNextPropagatedData> extender = interceptorFactory.Invoke(propagatedData);
+                var extender = interceptorFactory.Invoke(propagatedData);
                 extender.AfterHijack.Register(chainEvt.Invoke);
             }
         }
 
-        public RewirerChainLink ThenContinueRewiringWith(
-            Func<TPropagatedData, IChainableRewirer> interceptorFactory)
+        public RewirerChainLink ThenContinueRewiringWith(Func<TPropagatedData, IChainableRewirer> interceptorFactory)
         {
             MultiRegisterEvent chainEvt = new();
             OnPropagate.Register(AfterIntercepted);
@@ -76,7 +75,7 @@ namespace ShapezShifter.Hijack
             void AfterIntercepted(TPropagatedData propagatedData)
             {
                 OnPropagate.Unregister(AfterIntercepted);
-                IChainableRewirer<TNextPropagatedData> rewirer = interceptorFactory.Invoke(propagatedData);
+                var rewirer = interceptorFactory.Invoke(propagatedData);
                 RewirerHandle handle = GameRewirers.AddRewirer(rewirer);
                 rewirer.AfterHijack.Register(chainEvt.Invoke);
                 rewirer.AfterHijack.Register(RemoveExtender);
@@ -162,7 +161,7 @@ namespace ShapezShifter.Hijack
             void AfterIntercepted()
             {
                 OnPropagate.Unregister(AfterIntercepted);
-                IChainableRewirer<TPropagatedData> rewirer = interceptorFactory.Invoke();
+                var rewirer = interceptorFactory.Invoke();
                 RewirerHandle handle = GameRewirers.AddRewirer(rewirer);
 
                 rewirer.AfterHijack.Register(chainEvt.Invoke);

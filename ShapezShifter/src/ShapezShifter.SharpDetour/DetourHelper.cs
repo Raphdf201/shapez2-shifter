@@ -18,12 +18,11 @@ namespace ShapezShifter.SharpDetour
     {
         #region Prefix with no return
 
-        public static Hook CreatePrefixHook<TObject>(Expression<Action<TObject>> original,
-            Action<TObject> prefix)
+        public static Hook CreatePrefixHook<TObject>(Expression<Action<TObject>> original, Action<TObject> prefix)
         {
             MethodInfo actualMethodBody = GetRuntimeMethod<TObject>(original);
 
-            return new Hook(actualMethodBody, (Action<Action<TObject>, TObject>)Patch);
+            return new Hook(source: actualMethodBody, target: (Action<Action<TObject>, TObject>)Patch);
 
             void Patch(Action<TObject> orig, TObject self)
             {
@@ -38,13 +37,12 @@ namespace ShapezShifter.SharpDetour
         {
             MethodInfo actualMethodBody = GetRuntimeMethod<TObject>(original);
 
-            return new Hook(actualMethodBody,
-                (Action<Action<TObject, TArg0>, TObject, TArg0>)Patch);
+            return new Hook(source: actualMethodBody, target: (Action<Action<TObject, TArg0>, TObject, TArg0>)Patch);
 
             void Patch(Action<TObject, TArg0> orig, TObject self, TArg0 arg0)
             {
                 arg0 = prefix(arg0);
-                orig(self, arg0);
+                orig(arg1: self, arg2: arg0);
             }
         }
 
@@ -54,13 +52,14 @@ namespace ShapezShifter.SharpDetour
         {
             MethodInfo actualMethodBody = GetRuntimeMethod<TObject>(original);
 
-            return new Hook(actualMethodBody,
-                (Action<Action<TObject, TArg0, TArg1>, TObject, TArg0, TArg1>)Patch);
+            return new Hook(
+                source: actualMethodBody,
+                target: (Action<Action<TObject, TArg0, TArg1>, TObject, TArg0, TArg1>)Patch);
 
             void Patch(Action<TObject, TArg0, TArg1> orig, TObject self, TArg0 arg0, TArg1 arg1)
             {
-                (arg0, arg1) = prefix(self, arg0, arg1);
-                orig(self, arg0, arg1);
+                (arg0, arg1) = prefix(arg1: self, arg2: arg0, arg3: arg1);
+                orig(arg1: self, arg2: arg0, arg3: arg1);
             }
         }
 
@@ -70,14 +69,14 @@ namespace ShapezShifter.SharpDetour
         {
             MethodInfo actualMethodBody = GetRuntimeMethod<TObject>(original);
 
-            return new Hook(actualMethodBody,
-                (Action<Action<TObject, TArg0, TArg1, TArg2>, TObject, TArg0, TArg1, TArg2>)Patch);
+            return new Hook(
+                source: actualMethodBody,
+                target: (Action<Action<TObject, TArg0, TArg1, TArg2>, TObject, TArg0, TArg1, TArg2>)Patch);
 
-            void Patch(Action<TObject, TArg0, TArg1, TArg2> orig, TObject self, TArg0 arg0,
-                TArg1 arg1, TArg2 arg2)
+            void Patch(Action<TObject, TArg0, TArg1, TArg2> orig, TObject self, TArg0 arg0, TArg1 arg1, TArg2 arg2)
             {
-                (arg0, arg1, arg2) = prefix(self, arg0, arg1, arg2);
-                orig(self, arg0, arg1, arg2);
+                (arg0, arg1, arg2) = prefix(arg1: self, arg2: arg0, arg3: arg1, arg4: arg2);
+                orig(arg1: self, arg2: arg0, arg3: arg1, arg4: arg2);
             }
         }
 
@@ -87,17 +86,21 @@ namespace ShapezShifter.SharpDetour
         {
             MethodInfo actualMethodBody = GetRuntimeMethod<TObject>(original);
 
-            return new Hook(actualMethodBody,
-                (Action<Action<TObject, TArg0, TArg1, TArg2, TArg3>, TObject, TArg0, TArg1, TArg2,
-                    TArg3>)Patch);
+            return new Hook(
+                source: actualMethodBody,
+                target: (Action<Action<TObject, TArg0, TArg1, TArg2, TArg3>, TObject, TArg0, TArg1, TArg2, TArg3>)
+                Patch);
 
-            void Patch(Action<TObject, TArg0, TArg1, TArg2, TArg3> orig, TObject self, TArg0 arg0,
+            void Patch(
+                Action<TObject, TArg0, TArg1, TArg2, TArg3> orig,
+                TObject self,
+                TArg0 arg0,
                 TArg1 arg1,
                 TArg2 arg2,
                 TArg3 arg3)
             {
-                (arg0, arg1, arg2, arg3) = prefix(self, arg0, arg1, arg2, arg3);
-                orig(self, arg0, arg1, arg2, arg3);
+                (arg0, arg1, arg2, arg3) = prefix(arg1: self, arg2: arg0, arg3: arg1, arg4: arg2, arg5: arg3);
+                orig(arg1: self, arg2: arg0, arg3: arg1, arg4: arg2, arg5: arg3);
             }
         }
 
@@ -111,8 +114,7 @@ namespace ShapezShifter.SharpDetour
         {
             MethodInfo actualMethodBody = GetRuntimeMethod<TObject>(original);
 
-            return new Hook(actualMethodBody,
-                (Func<Func<TObject, TReturn>, TObject, TReturn>)Patch);
+            return new Hook(source: actualMethodBody, target: (Func<Func<TObject, TReturn>, TObject, TReturn>)Patch);
 
             TReturn Patch(Func<TObject, TReturn> orig, TObject self)
             {
@@ -127,13 +129,14 @@ namespace ShapezShifter.SharpDetour
         {
             MethodInfo actualMethodBody = GetRuntimeMethod<TObject>(original);
 
-            return new Hook(actualMethodBody,
-                (Func<Func<TObject, TArg0, TReturn>, TObject, TArg0, TReturn>)Patch);
+            return new Hook(
+                source: actualMethodBody,
+                target: (Func<Func<TObject, TArg0, TReturn>, TObject, TArg0, TReturn>)Patch);
 
             TReturn Patch(Func<TObject, TArg0, TReturn> orig, TObject self, TArg0 arg0)
             {
-                arg0 = prefix(self, arg0);
-                return orig(self, arg0);
+                arg0 = prefix(arg1: self, arg2: arg0);
+                return orig(arg1: self, arg2: arg0);
             }
         }
 
@@ -143,14 +146,14 @@ namespace ShapezShifter.SharpDetour
         {
             MethodInfo actualMethodBody = GetRuntimeMethod<TObject>(original);
 
-            return new Hook(actualMethodBody,
-                (Func<Func<TObject, TArg0, TArg1, TReturn>, TObject, TArg0, TArg1, TReturn>)Patch);
+            return new Hook(
+                source: actualMethodBody,
+                target: (Func<Func<TObject, TArg0, TArg1, TReturn>, TObject, TArg0, TArg1, TReturn>)Patch);
 
-            TReturn Patch(Func<TObject, TArg0, TArg1, TReturn> orig, TObject self, TArg0 arg0,
-                TArg1 arg1)
+            TReturn Patch(Func<TObject, TArg0, TArg1, TReturn> orig, TObject self, TArg0 arg0, TArg1 arg1)
             {
-                (arg0, arg1) = prefix(self, arg0, arg1);
-                return orig(self, arg0, arg1);
+                (arg0, arg1) = prefix(arg1: self, arg2: arg0, arg3: arg1);
+                return orig(arg1: self, arg2: arg0, arg3: arg1);
             }
         }
 
@@ -160,16 +163,20 @@ namespace ShapezShifter.SharpDetour
         {
             MethodInfo actualMethodBody = GetRuntimeMethod<TObject>(original);
 
-            return new Hook(actualMethodBody,
-                (Func<Func<TObject, TArg0, TArg1, TArg2, TReturn>, TObject, TArg0, TArg1, TArg2,
-                    TReturn>)Patch);
+            return new Hook(
+                source: actualMethodBody,
+                target: (Func<Func<TObject, TArg0, TArg1, TArg2, TReturn>, TObject, TArg0, TArg1, TArg2, TReturn>)
+                Patch);
 
-            TReturn Patch(Func<TObject, TArg0, TArg1, TArg2, TReturn> orig, TObject self,
-                TArg0 arg0, TArg1 arg1,
+            TReturn Patch(
+                Func<TObject, TArg0, TArg1, TArg2, TReturn> orig,
+                TObject self,
+                TArg0 arg0,
+                TArg1 arg1,
                 TArg2 arg2)
             {
-                (arg0, arg1, arg2) = prefix(self, arg0, arg1, arg2);
-                return orig(self, arg0, arg1, arg2);
+                (arg0, arg1, arg2) = prefix(arg1: self, arg2: arg0, arg3: arg1, arg4: arg2);
+                return orig(arg1: self, arg2: arg0, arg3: arg1, arg4: arg2);
             }
         }
 
@@ -179,17 +186,21 @@ namespace ShapezShifter.SharpDetour
         {
             MethodInfo actualMethodBody = GetRuntimeMethod<TObject>(original);
 
-            return new Hook(actualMethodBody,
-                (Func<Func<TObject, TArg0, TArg1, TArg2, TArg3, TReturn>, TObject, TArg0, TArg1,
-                    TArg2, TArg3, TReturn>)
-                Patch);
+            return new Hook(
+                source: actualMethodBody,
+                target: (Func<Func<TObject, TArg0, TArg1, TArg2, TArg3, TReturn>, TObject, TArg0, TArg1, TArg2, TArg3,
+                    TReturn>)Patch);
 
-            TReturn Patch(Func<TObject, TArg0, TArg1, TArg2, TArg3, TReturn> orig, TObject self,
-                TArg0 arg0, TArg1 arg1,
-                TArg2 arg2, TArg3 arg3)
+            TReturn Patch(
+                Func<TObject, TArg0, TArg1, TArg2, TArg3, TReturn> orig,
+                TObject self,
+                TArg0 arg0,
+                TArg1 arg1,
+                TArg2 arg2,
+                TArg3 arg3)
             {
-                (arg0, arg1, arg2, arg3) = prefix(self, arg0, arg1, arg2, arg3);
-                return orig(self, arg0, arg1, arg2, arg3);
+                (arg0, arg1, arg2, arg3) = prefix(arg1: self, arg2: arg0, arg3: arg1, arg4: arg2, arg5: arg3);
+                return orig(arg1: self, arg2: arg0, arg3: arg1, arg4: arg2, arg5: arg3);
             }
         }
 
@@ -197,11 +208,10 @@ namespace ShapezShifter.SharpDetour
 
         #region Postfix with no return
 
-        public static Hook CreatePostfixHook<TObject>(Expression<Action<TObject>> original,
-            Action<TObject> postfix)
+        public static Hook CreatePostfixHook<TObject>(Expression<Action<TObject>> original, Action<TObject> postfix)
         {
             MethodInfo actualMethodBody = GetRuntimeMethod<TObject>(original);
-            return new Hook(actualMethodBody, (Action<Action<TObject>, TObject>)Patch);
+            return new Hook(source: actualMethodBody, target: (Action<Action<TObject>, TObject>)Patch);
 
             void Patch(Action<TObject> orig, TObject self)
             {
@@ -215,13 +225,12 @@ namespace ShapezShifter.SharpDetour
             Action<TObject, TArg0> postfix)
         {
             MethodInfo actualMethodBody = GetRuntimeMethod<TObject>(original);
-            return new Hook(actualMethodBody,
-                (Action<Action<TObject, TArg0>, TObject, TArg0>)Patch);
+            return new Hook(source: actualMethodBody, target: (Action<Action<TObject, TArg0>, TObject, TArg0>)Patch);
 
             void Patch(Action<TObject, TArg0> orig, TObject self, TArg0 arg0)
             {
-                orig(self, arg0);
-                postfix(self, arg0);
+                orig(arg1: self, arg2: arg0);
+                postfix(arg1: self, arg2: arg0);
             }
         }
 
@@ -230,13 +239,14 @@ namespace ShapezShifter.SharpDetour
             Action<TObject, TArg0, TArg1> postfix)
         {
             MethodInfo actualMethodBody = GetRuntimeMethod<TObject>(original);
-            return new Hook(actualMethodBody,
-                (Action<Action<TObject, TArg0, TArg1>, TObject, TArg0, TArg1>)Patch);
+            return new Hook(
+                source: actualMethodBody,
+                target: (Action<Action<TObject, TArg0, TArg1>, TObject, TArg0, TArg1>)Patch);
 
             void Patch(Action<TObject, TArg0, TArg1> orig, TObject self, TArg0 arg0, TArg1 arg1)
             {
-                orig(self, arg0, arg1);
-                postfix(self, arg0, arg1);
+                orig(arg1: self, arg2: arg0, arg3: arg1);
+                postfix(arg1: self, arg2: arg0, arg3: arg1);
             }
         }
 
@@ -245,14 +255,14 @@ namespace ShapezShifter.SharpDetour
             Action<TObject, TArg0, TArg1, TArg2> postfix)
         {
             MethodInfo actualMethodBody = GetRuntimeMethod<TObject>(original);
-            return new Hook(actualMethodBody,
-                (Action<Action<TObject, TArg0, TArg1, TArg2>, TObject, TArg0, TArg1, TArg2>)Patch);
+            return new Hook(
+                source: actualMethodBody,
+                target: (Action<Action<TObject, TArg0, TArg1, TArg2>, TObject, TArg0, TArg1, TArg2>)Patch);
 
-            void Patch(Action<TObject, TArg0, TArg1, TArg2> orig, TObject self, TArg0 arg0,
-                TArg1 arg1, TArg2 arg2)
+            void Patch(Action<TObject, TArg0, TArg1, TArg2> orig, TObject self, TArg0 arg0, TArg1 arg1, TArg2 arg2)
             {
-                orig(self, arg0, arg1, arg2);
-                postfix(self, arg0, arg1, arg2);
+                orig(arg1: self, arg2: arg0, arg3: arg1, arg4: arg2);
+                postfix(arg1: self, arg2: arg0, arg3: arg1, arg4: arg2);
             }
         }
 
@@ -261,17 +271,70 @@ namespace ShapezShifter.SharpDetour
             Action<TObject, TArg0, TArg1, TArg2, TArg3> postfix)
         {
             MethodInfo actualMethodBody = GetRuntimeMethod<TObject>(original);
-            return new Hook(actualMethodBody,
-                (Action<Action<TObject, TArg0, TArg1, TArg2, TArg3>, TObject, TArg0, TArg1, TArg2,
-                    TArg3>)Patch);
+            return new Hook(
+                source: actualMethodBody,
+                target: (Action<Action<TObject, TArg0, TArg1, TArg2, TArg3>, TObject, TArg0, TArg1, TArg2, TArg3>)
+                Patch);
 
-            void Patch(Action<TObject, TArg0, TArg1, TArg2, TArg3> orig, TObject self, TArg0 arg0,
+            void Patch(
+                Action<TObject, TArg0, TArg1, TArg2, TArg3> orig,
+                TObject self,
+                TArg0 arg0,
                 TArg1 arg1,
                 TArg2 arg2,
                 TArg3 arg3)
             {
-                orig(self, arg0, arg1, arg2, arg3);
-                postfix(self, arg0, arg1, arg2, arg3);
+                orig(arg1: self, arg2: arg0, arg3: arg1, arg4: arg2, arg5: arg3);
+                postfix(arg1: self, arg2: arg0, arg3: arg1, arg4: arg2, arg5: arg3);
+            }
+        }
+
+        public static Hook CreatePostfixHook<TObject, TArg0, TArg1, TArg2, TArg3, TArg4>(
+            Expression<Action<TObject, TArg0, TArg1, TArg2, TArg3, TArg4>> original,
+            Action<TObject, TArg0, TArg1, TArg2, TArg3, TArg4> postfix)
+        {
+            MethodInfo actualMethodBody = GetRuntimeMethod<TObject>(original);
+            return new Hook(
+                source: actualMethodBody,
+                target: (Action<Action<TObject, TArg0, TArg1, TArg2, TArg3, TArg4>, TObject, TArg0, TArg1, TArg2, TArg3,
+                    TArg4>)Patch);
+
+            void Patch(
+                Action<TObject, TArg0, TArg1, TArg2, TArg3, TArg4> orig,
+                TObject self,
+                TArg0 arg0,
+                TArg1 arg1,
+                TArg2 arg2,
+                TArg3 arg3,
+                TArg4 arg4)
+            {
+                orig(arg1: self, arg2: arg0, arg3: arg1, arg4: arg2, arg5: arg3, arg6: arg4);
+                postfix(arg1: self, arg2: arg0, arg3: arg1, arg4: arg2, arg5: arg3, arg6: arg4);
+            }
+        }
+
+        public static Hook CreatePostfixHook<TObject, TArg0, TArg1, TArg2, TArg3, TArg4, TArg5>(
+            Expression<Action<TObject, TArg0, TArg1, TArg2, TArg3, TArg4, TArg5>> original,
+            Action<TObject, TArg0, TArg1, TArg2, TArg3, TArg4, TArg5> postfix)
+        {
+            MethodInfo actualMethodBody = GetRuntimeMethod<TObject>(original);
+            return new Hook(
+                source: actualMethodBody,
+                target: (Action<Action<TObject, TArg0, TArg1, TArg2, TArg3, TArg4, TArg5>, TObject, TArg0, TArg1, TArg2,
+                    TArg3, TArg4, TArg5>)Patch);
+
+            void Patch(
+                Action<TObject, TArg0, TArg1, TArg2, TArg3, TArg4, TArg5> orig,
+                TObject self,
+                TArg0 arg0,
+                TArg1 arg1,
+                TArg2 arg2,
+                TArg3 arg3,
+                TArg4 arg4,
+                TArg5 arg5)
+            {
+                orig(arg1: self, arg2: arg0, arg3: arg1, arg4: arg2, arg5: arg3, arg6: arg4, arg7: arg5);
+                postfix(arg1: self, arg2: arg0, arg3: arg1, arg4: arg2, arg5: arg3, arg6: arg4, arg7: arg5);
             }
         }
 
@@ -284,13 +347,12 @@ namespace ShapezShifter.SharpDetour
             Func<TObject, TResult, TResult> postfix)
         {
             MethodInfo actualMethodBody = GetRuntimeMethod<TObject>(original);
-            return new Hook(actualMethodBody,
-                (Func<Func<TObject, TResult>, TObject, TResult>)Patch);
+            return new Hook(source: actualMethodBody, target: (Func<Func<TObject, TResult>, TObject, TResult>)Patch);
 
             TResult Patch(Func<TObject, TResult> orig, TObject self)
             {
                 TResult value = orig(self);
-                return postfix(self, value);
+                return postfix(arg1: self, arg2: value);
             }
         }
 
@@ -299,13 +361,14 @@ namespace ShapezShifter.SharpDetour
             Func<TObject, TArg0, TResult, TResult> postfix)
         {
             MethodInfo actualMethodBody = GetRuntimeMethod<TObject>(original);
-            return new Hook(actualMethodBody,
-                (Func<Func<TObject, TArg0, TResult>, TObject, TArg0, TResult>)Patch);
+            return new Hook(
+                source: actualMethodBody,
+                target: (Func<Func<TObject, TArg0, TResult>, TObject, TArg0, TResult>)Patch);
 
             TResult Patch(Func<TObject, TArg0, TResult> orig, TObject self, TArg0 arg0)
             {
-                TResult value = orig(self, arg0);
-                return postfix(self, arg0, value);
+                TResult value = orig(arg1: self, arg2: arg0);
+                return postfix(arg1: self, arg2: arg0, arg3: value);
             }
         }
 
@@ -314,14 +377,14 @@ namespace ShapezShifter.SharpDetour
             Func<TObject, TArg0, TArg1, TResult, TResult> postfix)
         {
             MethodInfo actualMethodBody = GetRuntimeMethod<TObject>(original);
-            return new Hook(actualMethodBody,
-                (Func<Func<TObject, TArg0, TArg1, TResult>, TObject, TArg0, TArg1, TResult>)Patch);
+            return new Hook(
+                source: actualMethodBody,
+                target: (Func<Func<TObject, TArg0, TArg1, TResult>, TObject, TArg0, TArg1, TResult>)Patch);
 
-            TResult Patch(Func<TObject, TArg0, TArg1, TResult> orig, TObject self, TArg0 arg0,
-                TArg1 arg1)
+            TResult Patch(Func<TObject, TArg0, TArg1, TResult> orig, TObject self, TArg0 arg0, TArg1 arg1)
             {
-                TResult value = orig(self, arg0, arg1);
-                return postfix(self, arg0, arg1, value);
+                TResult value = orig(arg1: self, arg2: arg0, arg3: arg1);
+                return postfix(arg1: self, arg2: arg0, arg3: arg1, arg4: value);
             }
         }
 
@@ -330,16 +393,20 @@ namespace ShapezShifter.SharpDetour
             Func<TObject, TArg0, TArg1, TArg2, TResult, TResult> postfix)
         {
             MethodInfo actualMethodBody = GetRuntimeMethod<TObject>(original);
-            return new Hook(actualMethodBody,
-                (Func<Func<TObject, TArg0, TArg1, TArg2, TResult>, TObject, TArg0, TArg1, TArg2,
-                    TResult>)Patch);
+            return new Hook(
+                source: actualMethodBody,
+                target: (Func<Func<TObject, TArg0, TArg1, TArg2, TResult>, TObject, TArg0, TArg1, TArg2, TResult>)
+                Patch);
 
-            TResult Patch(Func<TObject, TArg0, TArg1, TArg2, TResult> orig, TObject self,
-                TArg0 arg0, TArg1 arg1,
+            TResult Patch(
+                Func<TObject, TArg0, TArg1, TArg2, TResult> orig,
+                TObject self,
+                TArg0 arg0,
+                TArg1 arg1,
                 TArg2 arg2)
             {
-                TResult value = orig(self, arg0, arg1, arg2);
-                return postfix(self, arg0, arg1, arg2, value);
+                TResult value = orig(arg1: self, arg2: arg0, arg3: arg1, arg4: arg2);
+                return postfix(arg1: self, arg2: arg0, arg3: arg1, arg4: arg2, arg5: value);
             }
         }
 
@@ -348,17 +415,85 @@ namespace ShapezShifter.SharpDetour
             Func<TObject, TArg0, TArg1, TArg2, TArg3, TResult, TResult> postfix)
         {
             MethodInfo actualMethodBody = GetRuntimeMethod<TObject>(original);
-            return new Hook(actualMethodBody,
-                (Func<Func<TObject, TArg0, TArg1, TArg2, TArg3, TResult>, TObject, TArg0, TArg1,
-                    TArg2, TArg3, TResult>)
-                Patch);
+            return new Hook(
+                source: actualMethodBody,
+                target: (Func<Func<TObject, TArg0, TArg1, TArg2, TArg3, TResult>, TObject, TArg0, TArg1, TArg2, TArg3,
+                    TResult>)Patch);
 
-            TResult Patch(Func<TObject, TArg0, TArg1, TArg2, TArg3, TResult> orig, TObject self,
-                TArg0 arg0, TArg1 arg1,
-                TArg2 arg2, TArg3 arg3)
+            TResult Patch(
+                Func<TObject, TArg0, TArg1, TArg2, TArg3, TResult> orig,
+                TObject self,
+                TArg0 arg0,
+                TArg1 arg1,
+                TArg2 arg2,
+                TArg3 arg3)
             {
-                TResult value = orig(self, arg0, arg1, arg2, arg3);
-                return postfix(self, arg0, arg1, arg2, arg3, value);
+                TResult value = orig(arg1: self, arg2: arg0, arg3: arg1, arg4: arg2, arg5: arg3);
+                return postfix(arg1: self, arg2: arg0, arg3: arg1, arg4: arg2, arg5: arg3, arg6: value);
+            }
+        }
+
+        public static Hook CreatePostfixHook<TObject, TArg0, TArg1, TArg2, TArg3, TArg4, TResult>(
+            Expression<Func<TObject, TArg0, TArg1, TArg2, TArg3, TArg4, TResult>> original,
+            Func<TObject, TArg0, TArg1, TArg2, TArg3, TArg4, TResult, TResult> postfix)
+        {
+            MethodInfo actualMethodBody = GetRuntimeMethod<TObject>(original);
+            return new Hook(
+                source: actualMethodBody,
+                target: (Func<Func<TObject, TArg0, TArg1, TArg2, TArg3, TArg4, TResult>, TObject, TArg0, TArg1, TArg2,
+                    TArg3, TArg4, TResult>)Patch);
+
+            TResult Patch(
+                Func<TObject, TArg0, TArg1, TArg2, TArg3, TArg4, TResult> orig,
+                TObject self,
+                TArg0 arg0,
+                TArg1 arg1,
+                TArg2 arg2,
+                TArg3 arg3,
+                TArg4 arg4)
+            {
+                TResult value = orig(arg1: self, arg2: arg0, arg3: arg1, arg4: arg2, arg5: arg3, arg6: arg4);
+                return postfix(arg1: self, arg2: arg0, arg3: arg1, arg4: arg2, arg5: arg3, arg6: arg4, arg7: value);
+            }
+        }
+
+        public static Hook CreatePostfixHook<TObject, TArg0, TArg1, TArg2, TArg3, TArg4, TArg5, TResult>(
+            Expression<Func<TObject, TArg0, TArg1, TArg2, TArg3, TArg4, TArg5, TResult>> original,
+            Func<TObject, TArg0, TArg1, TArg2, TArg3, TArg4, TArg5, TResult, TResult> postfix)
+        {
+            MethodInfo actualMethodBody = GetRuntimeMethod<TObject>(original);
+            return new Hook(
+                source: actualMethodBody,
+                target: (Func<Func<TObject, TArg0, TArg1, TArg2, TArg3, TArg4, TArg5, TResult>, TObject, TArg0, TArg1,
+                    TArg2, TArg3, TArg4, TArg5, TResult>)Patch);
+
+            TResult Patch(
+                Func<TObject, TArg0, TArg1, TArg2, TArg3, TArg4, TArg5, TResult> orig,
+                TObject self,
+                TArg0 arg0,
+                TArg1 arg1,
+                TArg2 arg2,
+                TArg3 arg3,
+                TArg4 arg4,
+                TArg5 arg5)
+            {
+                TResult value = orig(
+                    arg1: self,
+                    arg2: arg0,
+                    arg3: arg1,
+                    arg4: arg2,
+                    arg5: arg3,
+                    arg6: arg4,
+                    arg7: arg5);
+                return postfix(
+                    arg1: self,
+                    arg2: arg0,
+                    arg3: arg1,
+                    arg4: arg2,
+                    arg5: arg3,
+                    arg6: arg4,
+                    arg7: arg5,
+                    arg8: value);
             }
         }
 
@@ -366,13 +501,10 @@ namespace ShapezShifter.SharpDetour
 
         #region Static Postfix with no return (non-static class)
 
-        public static Hook CreateStaticPostfixHook<TObject>(
-            Expression<Action<TObject>> original,
-            Action postfix)
+        public static Hook CreateStaticPostfixHook<TObject>(Expression<Action<TObject>> original, Action postfix)
         {
             MethodInfo actualMethodBody = GetRuntimeMethod<TObject>(original);
-            return new Hook(actualMethodBody,
-                (Action<Action>)Patch);
+            return new Hook(source: actualMethodBody, target: (Action<Action>)Patch);
 
             void Patch(Action orig)
             {
@@ -386,8 +518,7 @@ namespace ShapezShifter.SharpDetour
             Action<TArg0> postfix)
         {
             MethodInfo actualMethodBody = GetRuntimeMethod<TObject>(original);
-            return new Hook(actualMethodBody,
-                (Action<Action<TArg0>, TArg0>)Patch);
+            return new Hook(source: actualMethodBody, target: (Action<Action<TArg0>, TArg0>)Patch);
 
             void Patch(Action<TArg0> orig, TArg0 arg0)
             {
@@ -401,13 +532,12 @@ namespace ShapezShifter.SharpDetour
             Action<TArg0, TArg1> postfix)
         {
             MethodInfo actualMethodBody = GetRuntimeMethod<TObject>(original);
-            return new Hook(actualMethodBody,
-                (Action<Action<TArg0, TArg1>, TArg0, TArg1>)Patch);
+            return new Hook(source: actualMethodBody, target: (Action<Action<TArg0, TArg1>, TArg0, TArg1>)Patch);
 
             void Patch(Action<TArg0, TArg1> orig, TArg0 arg0, TArg1 arg1)
             {
-                orig(arg0, arg1);
-                postfix(arg0, arg1);
+                orig(arg1: arg0, arg2: arg1);
+                postfix(arg1: arg0, arg2: arg1);
             }
         }
 
@@ -416,14 +546,14 @@ namespace ShapezShifter.SharpDetour
             Action<TArg0, TArg1, TArg2> postfix)
         {
             MethodInfo actualMethodBody = GetRuntimeMethod<TObject>(original);
-            return new Hook(actualMethodBody,
-                (Action<Action<TArg0, TArg1, TArg2>, TArg0, TArg1, TArg2>)Patch);
+            return new Hook(
+                source: actualMethodBody,
+                target: (Action<Action<TArg0, TArg1, TArg2>, TArg0, TArg1, TArg2>)Patch);
 
-            void Patch(Action<TArg0, TArg1, TArg2> orig, TArg0 arg0, TArg1 arg1,
-                TArg2 arg2)
+            void Patch(Action<TArg0, TArg1, TArg2> orig, TArg0 arg0, TArg1 arg1, TArg2 arg2)
             {
-                orig(arg0, arg1, arg2);
-                postfix(arg0, arg1, arg2);
+                orig(arg1: arg0, arg2: arg1, arg3: arg2);
+                postfix(arg1: arg0, arg2: arg1, arg3: arg2);
             }
         }
 
@@ -436,8 +566,7 @@ namespace ShapezShifter.SharpDetour
             Func<TResult, TResult> postfix)
         {
             MethodInfo actualMethodBody = GetRuntimeMethod<TObject>(original);
-            return new Hook(actualMethodBody,
-                (Func<Func<TResult>, TResult>)Patch);
+            return new Hook(source: actualMethodBody, target: (Func<Func<TResult>, TResult>)Patch);
 
             TResult Patch(Func<TResult> orig)
             {
@@ -451,13 +580,12 @@ namespace ShapezShifter.SharpDetour
             Func<TArg0, TResult, TResult> postfix)
         {
             MethodInfo actualMethodBody = GetRuntimeMethod<TObject>(original);
-            return new Hook(actualMethodBody,
-                (Func<Func<TArg0, TResult>, TArg0, TResult>)Patch);
+            return new Hook(source: actualMethodBody, target: (Func<Func<TArg0, TResult>, TArg0, TResult>)Patch);
 
             TResult Patch(Func<TArg0, TResult> orig, TArg0 arg0)
             {
                 TResult value = orig(arg0);
-                return postfix(arg0, value);
+                return postfix(arg1: arg0, arg2: value);
             }
         }
 
@@ -466,13 +594,14 @@ namespace ShapezShifter.SharpDetour
             Func<TArg0, TArg1, TResult, TResult> postfix)
         {
             MethodInfo actualMethodBody = GetRuntimeMethod<TObject>(original);
-            return new Hook(actualMethodBody,
-                (Func<Func<TArg0, TArg1, TResult>, TArg0, TArg1, TResult>)Patch);
+            return new Hook(
+                source: actualMethodBody,
+                target: (Func<Func<TArg0, TArg1, TResult>, TArg0, TArg1, TResult>)Patch);
 
             TResult Patch(Func<TArg0, TArg1, TResult> orig, TArg0 arg0, TArg1 arg1)
             {
-                TResult value = orig(arg0, arg1);
-                return postfix(arg0, arg1, value);
+                TResult value = orig(arg1: arg0, arg2: arg1);
+                return postfix(arg1: arg0, arg2: arg1, arg3: value);
             }
         }
 
@@ -481,14 +610,14 @@ namespace ShapezShifter.SharpDetour
             Func<TArg0, TArg1, TArg2, TResult, TResult> postfix)
         {
             MethodInfo actualMethodBody = GetRuntimeMethod<TObject>(original);
-            return new Hook(actualMethodBody,
-                (Func<Func<TArg0, TArg1, TArg2, TResult>, TArg0, TArg1, TArg2, TResult>)Patch);
+            return new Hook(
+                source: actualMethodBody,
+                target: (Func<Func<TArg0, TArg1, TArg2, TResult>, TArg0, TArg1, TArg2, TResult>)Patch);
 
-            TResult Patch(Func<TArg0, TArg1, TArg2, TResult> orig, TArg0 arg0, TArg1 arg1,
-                TArg2 arg2)
+            TResult Patch(Func<TArg0, TArg1, TArg2, TResult> orig, TArg0 arg0, TArg1 arg1, TArg2 arg2)
             {
-                TResult value = orig(arg0, arg1, arg2);
-                return postfix(arg0, arg1, arg2, value);
+                TResult value = orig(arg1: arg0, arg2: arg1, arg3: arg2);
+                return postfix(arg1: arg0, arg2: arg1, arg3: arg2, arg4: value);
             }
         }
 
@@ -501,9 +630,8 @@ namespace ShapezShifter.SharpDetour
             Expression<Func<TResult>> original,
             Func<TResult, TResult> postfix)
         {
-            MethodInfo actualMethodBody = GetRuntimeMethod(type, original);
-            return new Hook(actualMethodBody,
-                (Func<Func<TResult>, TResult>)Patch);
+            MethodInfo actualMethodBody = GetRuntimeMethod(type: type, original: original);
+            return new Hook(source: actualMethodBody, target: (Func<Func<TResult>, TResult>)Patch);
 
             TResult Patch(Func<TResult> orig)
             {
@@ -517,14 +645,13 @@ namespace ShapezShifter.SharpDetour
             Expression<Func<TArg0, TResult>> original,
             Func<TArg0, TResult, TResult> postfix)
         {
-            MethodInfo actualMethodBody = GetRuntimeMethod(type, original);
-            return new Hook(actualMethodBody,
-                (Func<Func<TArg0, TResult>, TArg0, TResult>)Patch);
+            MethodInfo actualMethodBody = GetRuntimeMethod(type: type, original: original);
+            return new Hook(source: actualMethodBody, target: (Func<Func<TArg0, TResult>, TArg0, TResult>)Patch);
 
             TResult Patch(Func<TArg0, TResult> orig, TArg0 arg0)
             {
                 TResult value = orig(arg0);
-                return postfix(arg0, value);
+                return postfix(arg1: arg0, arg2: value);
             }
         }
 
@@ -533,14 +660,15 @@ namespace ShapezShifter.SharpDetour
             Expression<Func<TArg0, TArg1, TResult>> original,
             Func<TArg0, TArg1, TResult, TResult> postfix)
         {
-            MethodInfo actualMethodBody = GetRuntimeMethod(type, original);
-            return new Hook(actualMethodBody,
-                (Func<Func<TArg0, TArg1, TResult>, TArg0, TArg1, TResult>)Patch);
+            MethodInfo actualMethodBody = GetRuntimeMethod(type: type, original: original);
+            return new Hook(
+                source: actualMethodBody,
+                target: (Func<Func<TArg0, TArg1, TResult>, TArg0, TArg1, TResult>)Patch);
 
             TResult Patch(Func<TArg0, TArg1, TResult> orig, TArg0 arg0, TArg1 arg1)
             {
-                TResult value = orig(arg0, arg1);
-                return postfix(arg0, arg1, value);
+                TResult value = orig(arg1: arg0, arg2: arg1);
+                return postfix(arg1: arg0, arg2: arg1, arg3: value);
             }
         }
 
@@ -549,15 +677,15 @@ namespace ShapezShifter.SharpDetour
             Expression<Func<TArg0, TArg1, TArg2, TResult>> original,
             Func<TArg0, TArg1, TArg2, TResult, TResult> postfix)
         {
-            MethodInfo actualMethodBody = GetRuntimeMethod(type, original);
-            return new Hook(actualMethodBody,
-                (Func<Func<TArg0, TArg1, TArg2, TResult>, TArg0, TArg1, TArg2, TResult>)Patch);
+            MethodInfo actualMethodBody = GetRuntimeMethod(type: type, original: original);
+            return new Hook(
+                source: actualMethodBody,
+                target: (Func<Func<TArg0, TArg1, TArg2, TResult>, TArg0, TArg1, TArg2, TResult>)Patch);
 
-            TResult Patch(Func<TArg0, TArg1, TArg2, TResult> orig, TArg0 arg0, TArg1 arg1,
-                TArg2 arg2)
+            TResult Patch(Func<TArg0, TArg1, TArg2, TResult> orig, TArg0 arg0, TArg1 arg1, TArg2 arg2)
             {
-                TResult value = orig(arg0, arg1, arg2);
-                return postfix(arg0, arg1, arg2, value);
+                TResult value = orig(arg1: arg0, arg2: arg1, arg3: arg2);
+                return postfix(arg1: arg0, arg2: arg1, arg3: arg2, arg4: value);
             }
         }
 
@@ -571,17 +699,21 @@ namespace ShapezShifter.SharpDetour
             Func<TObject, TArg0, TArg1, TArg2, TArg3, TResult, TResult> postfix)
         {
             MethodInfo actualMethodBody = GetRuntimeMethod<TObject>(original);
-            return new Hook(actualMethodBody,
-                (Func<Func<TObject, TArg0, TArg1, TArg2, TArg3, TResult>, TObject, TArg0, TArg1,
-                    TArg2, TArg3, TResult>)
-                Patch);
+            return new Hook(
+                source: actualMethodBody,
+                target: (Func<Func<TObject, TArg0, TArg1, TArg2, TArg3, TResult>, TObject, TArg0, TArg1, TArg2, TArg3,
+                    TResult>)Patch);
 
-            TResult Patch(Func<TObject, TArg0, TArg1, TArg2, TArg3, TResult> orig, TObject self,
-                TArg0 arg0, TArg1 arg1,
-                TArg2 arg2, TArg3 arg3)
+            TResult Patch(
+                Func<TObject, TArg0, TArg1, TArg2, TArg3, TResult> orig,
+                TObject self,
+                TArg0 arg0,
+                TArg1 arg1,
+                TArg2 arg2,
+                TArg3 arg3)
             {
-                TResult value = orig(self, arg0, arg1, arg2, arg3);
-                return postfix(self, arg0, arg1, arg2, arg3, value);
+                TResult value = orig(arg1: self, arg2: arg0, arg3: arg1, arg4: arg2, arg5: arg3);
+                return postfix(arg1: self, arg2: arg0, arg3: arg1, arg4: arg2, arg5: arg3, arg6: value);
             }
         }
 
@@ -592,82 +724,78 @@ namespace ShapezShifter.SharpDetour
         public static Hook Skip<TObject>(Expression<Action<TObject>> original)
         {
             MethodInfo actualMethodBody = GetRuntimeMethod<TObject>(original);
-            return new Hook(actualMethodBody, (Action<Action<TObject>, TObject>)Patch);
+            return new Hook(source: actualMethodBody, target: (Action<Action<TObject>, TObject>)Patch);
 
-            static void Patch(Action<TObject> orig, TObject self)
-            {
-            }
+            static void Patch(Action<TObject> orig, TObject self) { }
         }
 
         public static Hook Skip<TObject, TArg0>(Expression<Action<TObject, TArg0>> original)
         {
             MethodInfo actualMethodBody = GetRuntimeMethod<TObject>(original);
-            return new Hook(actualMethodBody,
-                (Action<Action<TObject, TArg0>, TObject, TArg0>)Patch);
+            return new Hook(source: actualMethodBody, target: (Action<Action<TObject, TArg0>, TObject, TArg0>)Patch);
 
-            static void Patch(Action<TObject, TArg0> orig, TObject self, TArg0 arg0)
-            {
-            }
+            static void Patch(Action<TObject, TArg0> orig, TObject self, TArg0 arg0) { }
         }
 
-        public static Hook Skip<TObject, TArg0, TArg1>(
-            Expression<Action<TObject, TArg0, TArg1>> original)
+        public static Hook Skip<TObject, TArg0, TArg1>(Expression<Action<TObject, TArg0, TArg1>> original)
         {
             MethodInfo actualMethodBody = GetRuntimeMethod<TObject>(original);
-            return new Hook(actualMethodBody,
-                (Action<Action<TObject, TArg0, TArg1>, TObject, TArg0, TArg1>)Patch);
+            return new Hook(
+                source: actualMethodBody,
+                target: (Action<Action<TObject, TArg0, TArg1>, TObject, TArg0, TArg1>)Patch);
 
-            static void Patch(Action<TObject, TArg0, TArg1> orig, TObject self, TArg0 arg0,
-                TArg1 arg1)
-            {
-            }
+            static void Patch(Action<TObject, TArg0, TArg1> orig, TObject self, TArg0 arg0, TArg1 arg1) { }
         }
 
-        public static Hook Skip<TObject, TArg0, TArg1, TArg2>(
-            Expression<Action<TObject, TArg0, TArg1, TArg2>> original)
+        public static Hook Skip<TObject, TArg0, TArg1, TArg2>(Expression<Action<TObject, TArg0, TArg1, TArg2>> original)
         {
             MethodInfo actualMethodBody = GetRuntimeMethod<TObject>(original);
-            return new Hook(actualMethodBody,
-                (Action<Action<TObject, TArg0, TArg1, TArg2>, TObject, TArg0, TArg1, TArg2>)Patch);
+            return new Hook(
+                source: actualMethodBody,
+                target: (Action<Action<TObject, TArg0, TArg1, TArg2>, TObject, TArg0, TArg1, TArg2>)Patch);
 
-            static void Patch(Action<TObject, TArg0, TArg1, TArg2> orig, TObject self, TArg0 arg0,
+            static void Patch(
+                Action<TObject, TArg0, TArg1, TArg2> orig,
+                TObject self,
+                TArg0 arg0,
                 TArg1 arg1,
-                TArg2 arg2)
-            {
-            }
+                TArg2 arg2) { }
         }
 
         public static Hook Skip<TObject, TArg0, TArg1, TArg2, TArg3>(
             Expression<Action<TObject, TArg0, TArg1, TArg2, TArg3>> original)
         {
             MethodInfo actualMethodBody = GetRuntimeMethod<TObject>(original);
-            return new Hook(actualMethodBody,
-                (Action<Action<TObject, TArg0, TArg1, TArg2, TArg3>, TObject, TArg0, TArg1, TArg2,
-                    TArg3>)Patch);
+            return new Hook(
+                source: actualMethodBody,
+                target: (Action<Action<TObject, TArg0, TArg1, TArg2, TArg3>, TObject, TArg0, TArg1, TArg2, TArg3>)
+                Patch);
 
-            static void Patch(Action<TObject, TArg0, TArg1, TArg2, TArg3> orig, TObject self,
-                TArg0 arg0, TArg1 arg1,
-                TArg2 arg2, TArg3 arg3)
-            {
-            }
+            static void Patch(
+                Action<TObject, TArg0, TArg1, TArg2, TArg3> orig,
+                TObject self,
+                TArg0 arg0,
+                TArg1 arg1,
+                TArg2 arg2,
+                TArg3 arg3) { }
         }
 
         #endregion
 
         #region Replace with no return
 
-        public static Hook Replace<TObject>(Expression<Action<TObject>> original,
-            Action<TObject> replacement)
+        public static Hook Replace<TObject>(Expression<Action<TObject>> original, Action<TObject> replacement)
         {
             MethodInfo actualMethodBody = GetRuntimeMethod<TObject>(original);
-            return new Hook(actualMethodBody, replacement);
+            return new Hook(source: actualMethodBody, target: replacement);
         }
 
-        public static Hook Replace<TObject, TArg0>(Expression<Action<TObject, TArg0>> original,
+        public static Hook Replace<TObject, TArg0>(
+            Expression<Action<TObject, TArg0>> original,
             Action<TObject, TArg0> replacement)
         {
             MethodInfo actualMethodBody = GetRuntimeMethod<TObject>(original);
-            return new Hook(actualMethodBody, replacement);
+            return new Hook(source: actualMethodBody, target: replacement);
         }
 
         public static Hook Replace<TObject, TArg0, TArg1>(
@@ -675,7 +803,7 @@ namespace ShapezShifter.SharpDetour
             Action<TObject, TArg0, TArg1> replacement)
         {
             MethodInfo actualMethodBody = GetRuntimeMethod<TObject>(original);
-            return new Hook(actualMethodBody, replacement);
+            return new Hook(source: actualMethodBody, target: replacement);
         }
 
         public static Hook Replace<TObject, TArg0, TArg1, TArg2>(
@@ -683,7 +811,7 @@ namespace ShapezShifter.SharpDetour
             Action<TObject, TArg0, TArg1, TArg2> replacement)
         {
             MethodInfo actualMethodBody = GetRuntimeMethod<TObject>(original);
-            return new Hook(actualMethodBody, replacement);
+            return new Hook(source: actualMethodBody, target: replacement);
         }
 
         public static Hook Replace<TObject, TArg0, TArg1, TArg2, TArg3>(
@@ -691,7 +819,7 @@ namespace ShapezShifter.SharpDetour
             Action<TObject, TArg0, TArg1, TArg2, TArg3> replacement)
         {
             MethodInfo actualMethodBody = GetRuntimeMethod<TObject>(original);
-            return new Hook(actualMethodBody, replacement);
+            return new Hook(source: actualMethodBody, target: replacement);
         }
 
         #endregion
@@ -699,13 +827,15 @@ namespace ShapezShifter.SharpDetour
         internal static MethodInfo GetRuntimeMethod<TObject>(LambdaExpression original)
         {
             string name = ((MethodCallExpression)original.Body).Method.Name;
-            MethodInfo actualMethodBody = typeof(TObject).GetMethod(name,
-                BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance |
-                BindingFlags.Static);
+            MethodInfo actualMethodBody = typeof(TObject).GetMethod(
+                name: name,
+                bindingAttr: BindingFlags.Public
+                             | BindingFlags.NonPublic
+                             | BindingFlags.Instance
+                             | BindingFlags.Static);
             if (actualMethodBody == null)
             {
-                throw new Exception(
-                    $"Could not find method {name} in type {typeof(TObject)} during runtime");
+                throw new Exception($"Could not find method {name} in type {typeof(TObject)} during runtime");
             }
 
             return actualMethodBody;
@@ -714,13 +844,15 @@ namespace ShapezShifter.SharpDetour
         private static MethodInfo GetRuntimeMethod(Type type, LambdaExpression original)
         {
             string name = ((MethodCallExpression)original.Body).Method.Name;
-            MethodInfo actualMethodBody = type.GetMethod(name,
-                BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance |
-                BindingFlags.Static);
+            MethodInfo actualMethodBody = type.GetMethod(
+                name: name,
+                bindingAttr: BindingFlags.Public
+                             | BindingFlags.NonPublic
+                             | BindingFlags.Instance
+                             | BindingFlags.Static);
             if (actualMethodBody == null)
             {
-                throw new Exception(
-                    $"Could not find method {name} in type {type} during runtime");
+                throw new Exception($"Could not find method {name} in type {type} during runtime");
             }
 
             return actualMethodBody;

@@ -6,19 +6,24 @@ namespace ShapezShifter.Flow.Research
     {
         private readonly IMilestoneSelector MilestoneSelector;
 
-        public UnlockIslandWithMilestoneResearchProgressionExtender(
-            IMilestoneSelector milestoneSelector)
+        public UnlockIslandWithMilestoneResearchProgressionExtender(IMilestoneSelector milestoneSelector)
         {
             MilestoneSelector = milestoneSelector;
         }
 
-        public void ExtendResearch(string scenarioId, ResearchProgression researchProgression,
+        public void ExtendResearch(
+            ScenarioId scenarioId,
+            ResearchProgression researchProgression,
             IslandDefinitionGroupId groupId)
         {
-            ResearchLevel level = MilestoneSelector.Select(scenarioId, researchProgression.Levels);
+            ResearchLevel level = MilestoneSelector.Select(
+                scenarioId: scenarioId,
+                milestones: researchProgression.Levels);
             level.Rewards = level.Rewards
-               .Append(new ResearchRewardIslandGroup(new SerializedResearchRewardIslandGroup(groupId.Name)))
-               .ToList();
+                                 .Append(
+                                      new ResearchRewardIslandGroup(
+                                          new SerializedResearchRewardIslandGroup(groupId.Name)))
+                                 .ToList();
         }
     }
 }

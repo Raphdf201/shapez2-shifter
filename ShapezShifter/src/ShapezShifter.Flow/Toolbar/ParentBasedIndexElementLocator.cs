@@ -10,10 +10,9 @@ namespace ShapezShifter.Flow.Toolbar
             return new RootElementLocator();
         }
 
-        public static IToolbarElementLocator ChildAt(this IToolbarElementLocator elementLocator,
-            Index index)
+        public static IToolbarElementLocator ChildAt(this IToolbarElementLocator elementLocator, Index index)
         {
-            return new ParentBasedIndexElementLocator(elementLocator, index);
+            return new ParentBasedIndexElementLocator(parentLocator: elementLocator, index: index);
         }
     }
 
@@ -69,9 +68,9 @@ namespace ShapezShifter.Flow.Toolbar
 
         public override string ToString()
         {
-            return $"{ParentLocator}\n" +
-                   new string(Enumerable.Repeat('\t', Depth()).ToArray()) +
-                   $"{Index}";
+            return $"{ParentLocator}\n"
+                   + new string(Enumerable.Repeat(element: '\t', count: Depth()).ToArray())
+                   + $"{Index}";
         }
     }
 }

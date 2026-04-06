@@ -12,27 +12,26 @@ namespace ShapezShifter
         public readonly ITutorialStateWriteAccess TutorialState;
         public readonly IDictionary<IEntityDefinition, PipettePlacementRequest> PipetteMap;
         public readonly ResearchUnlockProgressManager ProgressManager;
-        public readonly IReadonlyRailColorRegistry RailColorRegistry;
+        public readonly IReadOnlyRailColorRegistry RailColorRegistry;
         public readonly ResearchChunkLimitManager ChunkLimitManager;
         public readonly IViewportLayersController ViewportLayersController;
         public readonly short MaxBuildingLayer;
 
         public IslandInitiatorsParams(IslandPlacersCreator placersCreator, short maxBuildingLayer) : this(
-            placersCreator.Buildings,
-            placersCreator.Islands,
-            maxBuildingLayer,
-            placersCreator.ProgressManager,
-            placersCreator.EntityPlacementRunner,
-            placersCreator.IslandsModulesLookup,
-            placersCreator.PipetteMap,
-            placersCreator.TutorialState,
-            placersCreator.ChunkLimitManager,
-            placersCreator.ViewportLayersController,
-            placersCreator.RailColorRegistry)
-        {
-        }
+            buildings: placersCreator.Buildings,
+            islands: placersCreator.Islands,
+            maxBuildingLayer: maxBuildingLayer,
+            progressManager: placersCreator.ProgressManager,
+            entityPlacementRunner: placersCreator.EntityPlacementRunner,
+            islandsModulesLookup: placersCreator.IslandsModulesLookup,
+            pipetteMap: placersCreator.PipetteMap,
+            tutorialState: placersCreator.TutorialState,
+            chunkLimitManager: placersCreator.ChunkLimitManager,
+            viewportLayersController: placersCreator.ViewportLayersController,
+            railColorRegistry: placersCreator.RailColorRegistry) { }
 
-        private IslandInitiatorsParams(GameBuildings buildings,
+        private IslandInitiatorsParams(
+            GameBuildings buildings,
             GameIslands islands,
             short maxBuildingLayer,
             ResearchUnlockProgressManager progressManager,
@@ -42,7 +41,7 @@ namespace ShapezShifter
             ITutorialStateWriteAccess tutorialState,
             ResearchChunkLimitManager chunkLimitManager,
             IViewportLayersController viewportLayersController,
-            IReadonlyRailColorRegistry railColorRegistry)
+            IReadOnlyRailColorRegistry railColorRegistry)
         {
             Buildings = buildings;
             Islands = islands;

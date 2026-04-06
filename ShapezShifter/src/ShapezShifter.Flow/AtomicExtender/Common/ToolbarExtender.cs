@@ -6,8 +6,7 @@ using UnityEngine;
 
 namespace ShapezShifter.Flow.Atomic
 {
-    public class ToolbarRewirer : IToolbarDataRewirer,
-        IChainableRewirer<PlacementToolbarElementData>
+    public class ToolbarRewirer : IToolbarDataRewirer, IChainableRewirer<PlacementToolbarElementData>
     {
         private readonly PlacementInitiatorId Placement;
         private readonly IText Title;
@@ -15,7 +14,11 @@ namespace ShapezShifter.Flow.Atomic
         private readonly Sprite Icon;
         private readonly IToolbarEntryInsertLocation EntryInsertLocation;
 
-        public ToolbarRewirer(PlacementInitiatorId placement, IText title, IText description, Sprite icon,
+        public ToolbarRewirer(
+            PlacementInitiatorId placement,
+            IText title,
+            IText description,
+            Sprite icon,
             IToolbarEntryInsertLocation entryInsertLocation)
         {
             Placement = placement;
@@ -28,21 +31,22 @@ namespace ShapezShifter.Flow.Atomic
         public ToolbarData ModifyToolbarData(ToolbarData toolbarData)
         {
             PlacementToolbarElementData toolbarElement = new(
-                Title,
-                Description,
-                Placement,
-                Icon);
+                title: Title,
+                description: Description,
+                placerId: Placement,
+                icon: Icon);
 
-            EntryInsertLocation.AddEntry(toolbarData, toolbarElement);
-
+            EntryInsertLocation.AddEntry(toolbarData: toolbarData, elementData: toolbarElement);
 
             _AfterExtensionApplied.Invoke(toolbarElement);
             return toolbarData;
         }
 
-        public IEvent<PlacementToolbarElementData> AfterHijack => _AfterExtensionApplied;
+        public IEvent<PlacementToolbarElementData> AfterHijack
+        {
+            get { return _AfterExtensionApplied; }
+        }
 
-        private readonly MultiRegisterEvent<PlacementToolbarElementData> _AfterExtensionApplied =
-            new();
+        private readonly MultiRegisterEvent<PlacementToolbarElementData> _AfterExtensionApplied = new();
     }
 }

@@ -13,10 +13,14 @@ namespace ShapezShifter.Flow.Research
             SideUpgradeSelector = sideUpgradeSelector;
         }
 
-        public void ExtendResearch(string scenarioId, ResearchProgression researchProgression,
+        public void ExtendResearch(
+            ScenarioId scenarioId,
+            ResearchProgression researchProgression,
             BuildingDefinitionGroupId groupId)
         {
-            ResearchSideUpgrade sideUpgrade = SideUpgradeSelector.Select(scenarioId, researchProgression);
+            ResearchSideUpgrade sideUpgrade = SideUpgradeSelector.Select(
+                scenarioId: scenarioId,
+                progression: researchProgression);
             sideUpgrade.Rewards = sideUpgrade.Rewards.Append(new ResearchRewardBuildingGroup(groupId)).ToList();
         }
     }

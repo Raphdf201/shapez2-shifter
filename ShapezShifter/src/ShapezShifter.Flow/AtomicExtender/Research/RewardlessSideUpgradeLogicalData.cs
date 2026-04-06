@@ -11,9 +11,11 @@ namespace ShapezShifter.Flow.Research
         public readonly ISerializedResearchReward[] Rewards;
         public readonly ISerializedResearchCost[] Costs;
 
-        private RewardlessSideUpgradeLogicalData(IEnumerable<string> requiredUpgradeIds,
+        private RewardlessSideUpgradeLogicalData(
+            IEnumerable<string> requiredUpgradeIds,
             IEnumerable<string> requiredMechanicIds,
-            IEnumerable<ISerializedResearchReward> rewards, IEnumerable<ISerializedResearchCost> costs)
+            IEnumerable<ISerializedResearchReward> rewards,
+            IEnumerable<ISerializedResearchCost> costs)
         {
             RequiredUpgradeIds = requiredUpgradeIds.ToArray();
             RequiredMechanicIds = requiredMechanicIds.ToArray();

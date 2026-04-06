@@ -22,29 +22,25 @@ namespace ShapezShifter.Hijack
 
             // Use reflection to get the method since it has too many parameters for the helper
             MethodInfo serializeMethod = typeof(SavegameSerializer).GetMethod(
-                nameof(SavegameSerializer.SerializeSavegame),
-                BindingFlags.Public | BindingFlags.Instance);
+                name: nameof(SavegameSerializer.SerializeSavegame),
+                bindingAttr: BindingFlags.Public | BindingFlags.Instance);
 
             SerializeSavegameHook = new Hook(
-                serializeMethod,
-                new Func<Func<SavegameSerializer, Savegame, SavegameSerializer.GameContext, 
-                    MapSerializer, SimulationStateSerializer, Viewport, IReadOnlyDictionary<string, byte[]>>,
-                    SavegameSerializer, Savegame, SavegameSerializer.GameContext,
-                    MapSerializer, SimulationStateSerializer, Viewport, IReadOnlyDictionary<string, byte[]>>(
-                    OnSerializeSavegameHook));
+                source: serializeMethod,
+                target: new Func<
+                    Func<SavegameSerializer, Savegame, SavegameSerializer.GameContext, MapSerializer,
+                        SimulationStateSerializer, Viewport, IReadOnlyDictionary<string, byte[]>>, SavegameSerializer,
+                    Savegame, SavegameSerializer.GameContext, MapSerializer, SimulationStateSerializer, Viewport,
+                    IReadOnlyDictionary<string, byte[]>>(OnSerializeSavegameHook));
 
-            DeserializePlayerHook = DetourHelper.CreatePrefixHook<
-                Player,
-                SavegameBlobReader,
-                ResearchProgression,
-                Viewport>(
-                (player, reader, layout, viewport) => player.Deserialize(reader, layout, viewport),
-                OnDeserializePlayerPrefix);
+            DeserializePlayerHook = DetourHelper.CreatePrefixHook<Player, SavegameBlobReader, Viewport>(
+                original: (player, reader, viewport) => player.Deserialize(reader, viewport),
+                prefix: OnDeserializePlayerPrefix);
         }
 
         private IReadOnlyDictionary<string, byte[]> OnSerializeSavegameHook(
-            Func<SavegameSerializer, Savegame, SavegameSerializer.GameContext, 
-                MapSerializer, SimulationStateSerializer, Viewport, IReadOnlyDictionary<string, byte[]>> orig,
+            Func<SavegameSerializer, Savegame, SavegameSerializer.GameContext, MapSerializer, SimulationStateSerializer,
+                Viewport, IReadOnlyDictionary<string, byte[]>> orig,
             SavegameSerializer serializer,
             Savegame savegame,
             SavegameSerializer.GameContext context,
@@ -52,16 +48,20 @@ namespace ShapezShifter.Hijack
             SimulationStateSerializer simulationStateSerializer,
             Viewport viewport)
         {
-            IReadOnlyDictionary<string, byte[]> originalResult = orig(
-                serializer, savegame, context, mapSerializer, simulationStateSerializer, viewport);
+            var originalResult = orig(
+                arg1: serializer,
+                arg2: savegame,
+                arg3: context,
+                arg4: mapSerializer,
+                arg5: simulationStateSerializer,
+                arg6: viewport);
 
             Logger.Info?.Log("Intercepting savegame serialization for mod data");
 
-            IEnumerable<ISaveDataRewirer> saveDataRewirers =
-                RewirerProvider.RewirersOfType<ISaveDataRewirer>();
+            var saveDataRewirers = RewirerProvider.RewirersOfType<ISaveDataRewirer>();
 
             // Create a wrapper that can add to the existing serialized data
-            ModSaveDataBlobWriter modWriter = new ModSaveDataBlobWriter(originalResult, Logger);
+            var modWriter = new ModSaveDataBlobWriter(originalData: originalResult, logger: Logger);
 
             foreach (ISaveDataRewirer rewirer in saveDataRewirers)
             {
@@ -78,17 +78,15 @@ namespace ShapezShifter.Hijack
             return modWriter.GetCombinedData();
         }
 
-        private (SavegameBlobReader, ResearchProgression, Viewport) OnDeserializePlayerPrefix(
+        private (SavegameBlobReader, Viewport) OnDeserializePlayerPrefix(
             Player player,
             SavegameBlobReader reader,
-            ResearchProgression layout,
             Viewport viewport)
         {
             Logger.Info?.Log("Intercepting savegame deserialization for mod data");
 
             // Get all save data rewirers
-            IEnumerable<ISaveDataRewirer> saveDataRewirers =
-                RewirerProvider.RewirersOfType<ISaveDataRewirer>();
+            var saveDataRewirers = RewirerProvider.RewirersOfType<ISaveDataRewirer>();
 
             foreach (ISaveDataRewirer rewirer in saveDataRewirers)
             {
@@ -102,7 +100,7 @@ namespace ShapezShifter.Hijack
                 }
             }
 
-            return (reader, layout, viewport);
+            return (reader, viewport);
         }
 
         public void Dispose()

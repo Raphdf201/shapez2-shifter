@@ -13,8 +13,9 @@ namespace ShapezShifter.Kit
     [PublicAPI]
     public static class ObjectExtensions
     {
-        private static readonly MethodInfo CloneMethod =
-            typeof(object).GetMethod("MemberwiseClone", BindingFlags.NonPublic | BindingFlags.Instance);
+        private static readonly MethodInfo CloneMethod = typeof(object).GetMethod(
+            name: "MemberwiseClone",
+            bindingAttr: BindingFlags.NonPublic | BindingFlags.Instance);
 
         public static bool IsPrimitive(this Type type)
         {
@@ -28,7 +29,9 @@ namespace ShapezShifter.Kit
 
         public static object DeepCopy(this object originalObject)
         {
-            return InternalCopy(originalObject, new Dictionary<object, object>(new ReferenceEqualityComparer()));
+            return InternalCopy(
+                originalObject: originalObject,
+                visited: new Dictionary<object, object>(new ReferenceEqualityComparer()));
         }
 
         private static object InternalCopy(object originalObject, IDictionary<object, object> visited)
@@ -44,7 +47,7 @@ namespace ShapezShifter.Kit
                 return originalObject;
             }
 
-            if (visited.TryGetValue(originalObject, out object copy))
+            if (visited.TryGetValue(key: originalObject, value: out object copy))
             {
                 return copy;
             }
@@ -54,43 +57,65 @@ namespace ShapezShifter.Kit
                 return null;
             }
 
-            object cloneObject = CloneMethod.Invoke(originalObject, null);
+            object cloneObject = CloneMethod.Invoke(obj: originalObject, parameters: null);
             if (typeToReflect.IsArray)
             {
                 Type arrayType = typeToReflect.GetElementType();
                 if (!IsPrimitive(arrayType))
                 {
-                    Array clonedArray = (Array)cloneObject;
-                    clonedArray.ForEach((array, indices) =>
-                        array.SetValue(InternalCopy(clonedArray.GetValue(indices), visited), indices));
+                    var clonedArray = (Array)cloneObject;
+                    clonedArray.ForEach(
+                        (array, indices) => array.SetValue(
+                            value: InternalCopy(originalObject: clonedArray.GetValue(indices), visited: visited),
+                            indices: indices));
                 }
             }
 
-            visited.Add(originalObject, cloneObject);
-            CopyFields(originalObject, visited, cloneObject, typeToReflect);
-            RecursiveCopyBaseTypePrivateFields(originalObject, visited, cloneObject, typeToReflect);
+            visited.Add(key: originalObject, value: cloneObject);
+            CopyFields(
+                originalObject: originalObject,
+                visited: visited,
+                cloneObject: cloneObject,
+                typeToReflect: typeToReflect);
+            RecursiveCopyBaseTypePrivateFields(
+                originalObject: originalObject,
+                visited: visited,
+                cloneObject: cloneObject,
+                typeToReflect: typeToReflect);
             return cloneObject;
         }
 
-        private static void RecursiveCopyBaseTypePrivateFields(object originalObject,
-            IDictionary<object, object> visited, object cloneObject, Type typeToReflect)
+        private static void RecursiveCopyBaseTypePrivateFields(
+            object originalObject,
+            IDictionary<object, object> visited,
+            object cloneObject,
+            Type typeToReflect)
         {
             if (typeToReflect.BaseType != null)
             {
-                RecursiveCopyBaseTypePrivateFields(originalObject, visited, cloneObject, typeToReflect.BaseType);
-                CopyFields(originalObject,
-                    visited,
-                    cloneObject,
-                    typeToReflect.BaseType,
-                    BindingFlags.Instance | BindingFlags.NonPublic,
-                    info => info.IsPrivate);
+                RecursiveCopyBaseTypePrivateFields(
+                    originalObject: originalObject,
+                    visited: visited,
+                    cloneObject: cloneObject,
+                    typeToReflect: typeToReflect.BaseType);
+                CopyFields(
+                    originalObject: originalObject,
+                    visited: visited,
+                    cloneObject: cloneObject,
+                    typeToReflect: typeToReflect.BaseType,
+                    bindingFlags: BindingFlags.Instance | BindingFlags.NonPublic,
+                    filter: info => info.IsPrivate);
             }
         }
 
-        private static void CopyFields(object originalObject, IDictionary<object, object> visited, object cloneObject,
+        private static void CopyFields(
+            object originalObject,
+            IDictionary<object, object> visited,
+            object cloneObject,
             Type typeToReflect,
-            BindingFlags bindingFlags = BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public |
-                                        BindingFlags.FlattenHierarchy, Func<FieldInfo, bool> filter = null)
+            BindingFlags bindingFlags =
+                BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.FlattenHierarchy,
+            Func<FieldInfo, bool> filter = null)
         {
             foreach (FieldInfo fieldInfo in typeToReflect.GetFields(bindingFlags))
             {
@@ -105,8 +130,8 @@ namespace ShapezShifter.Kit
                 }
 
                 object originalFieldValue = fieldInfo.GetValue(originalObject);
-                object clonedFieldValue = InternalCopy(originalFieldValue, visited);
-                fieldInfo.SetValue(cloneObject, clonedFieldValue);
+                object clonedFieldValue = InternalCopy(originalObject: originalFieldValue, visited: visited);
+                fieldInfo.SetValue(obj: cloneObject, value: clonedFieldValue);
             }
         }
 
@@ -120,7 +145,7 @@ namespace ShapezShifter.Kit
     {
         public override bool Equals(object x, object y)
         {
-            return ReferenceEquals(x, y);
+            return ReferenceEquals(objA: x, objB: y);
         }
 
         public override int GetHashCode(object obj)
@@ -143,8 +168,9 @@ namespace ShapezShifter.Kit
                 ArrayTraverse walker = new(array);
                 do
                 {
-                    action(array, walker.Position);
-                } while (walker.Step());
+                    action(arg1: array, arg2: walker.Position);
+                }
+                while (walker.Step());
             }
         }
 

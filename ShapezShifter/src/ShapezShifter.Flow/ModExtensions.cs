@@ -1,8 +1,8 @@
+#nullable enable
 using System;
 using System.Linq;
 using ShapezShifter.Hijack;
 
-#nullable enable
 namespace ShapezShifter.Flow
 {
     /// <summary>
@@ -17,16 +17,18 @@ namespace ShapezShifter.Flow
         /// <param name="mod">The mod instance</param>
         /// <param name="dataName">Optional custom name for the data file (defaults to "data")</param>
         /// <returns>A configured ModSaveData instance and its Rewirer handle</returns>
-        public static (ModSaveData<T>, RewirerHandle) CreateSaveDataWithHandle<T>(this IMod mod, string dataName = "data") 
+        public static (ModSaveData<T>, RewirerHandle) CreateSaveDataWithHandle<T>(
+            this IMod mod,
+            string dataName = "data")
             where T : class, new()
         {
             // Generate filename from mod assembly name
             string assemblyName = mod.GetType().Assembly.GetName().Name;
             string fileName = $"{assemblyName}-{dataName}.json";
-            
+
             return ModSaveData<T>.Register(fileName);
         }
-        
+
         /// <summary>
         /// Creates a ModSaveData instance with automatic filename generation based on the mod's assembly.
         /// </summary>
@@ -34,13 +36,13 @@ namespace ShapezShifter.Flow
         /// <param name="mod">The mod instance</param>
         /// <param name="dataName">Optional custom name for the data file (defaults to "data")</param>
         /// <returns>A configured ModSaveData instance</returns>
-        public static ModSaveData<T> CreateSaveData<T>(this IMod mod, string dataName = "data") 
+        public static ModSaveData<T> CreateSaveData<T>(this IMod mod, string dataName = "data")
             where T : class, new()
         {
             // Generate filename from mod assembly name
             string assemblyName = mod.GetType().Assembly.GetName().Name;
             string fileName = $"{assemblyName}-{dataName}.json";
-            
+
             return ModSaveData<T>.Register(fileName).Item1;
         }
 
@@ -55,21 +57,32 @@ namespace ShapezShifter.Flow
         /// <param name="arg2">The second argument of the command (optional)</param>
         /// <param name="useAssemblyPrefix">Whether to prefix the command with the assembly name</param>
         /// <returns>A rewirer handle that can be used to unregister the command</returns>
-        public static RewirerHandle RegisterConsoleCommand(this IMod mod, string commandName,
-            Action<DebugConsole.CommandContext> handler, bool isCheat = false, DebugConsole.ConsoleOption? arg1 = null,
-            DebugConsole.ConsoleOption? arg2 = null, bool useAssemblyPrefix = true)
+        public static RewirerHandle RegisterConsoleCommand(
+            this IMod mod,
+            string commandName,
+            Action<DebugConsole.CommandContext> handler,
+            bool isCheat = false,
+            DebugConsole.ConsoleOption? arg1 = null,
+            DebugConsole.ConsoleOption? arg2 = null,
+            bool useAssemblyPrefix = true)
         {
-            var processedName = commandName;
+            string? processedName = commandName;
             if (useAssemblyPrefix)
             {
                 processedName = mod.GetType().Assembly.GetName().Name + "." + commandName;
             }
             if (processedName.Any(char.IsUpper))
             {
-                Debugging.Logger?.Warning?.Log("Console commands can't contain uppercase characters. The command has been lowercased");
+                Debugging.Logger?.Warning?.Log(
+                    "Console commands can't contain uppercase characters. The command has been lowercased");
                 processedName = processedName.ToLower();
             }
-            return ConsoleCommand.Register(processedName, handler, isCheat, arg1, arg2);
+            return ConsoleCommand.Register(
+                commandName: processedName,
+                handler: handler,
+                isCheat: isCheat,
+                arg1: arg1,
+                arg2: arg2);
         }
 
         public static RewirerHandle RunPeriodically(this IMod mod, Action<GameSessionOrchestrator, float> action)

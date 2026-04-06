@@ -4,7 +4,8 @@ namespace ShapezShifter.Hijack
 {
     public interface ISimulationSystemsRewirer : IRewirer
     {
-        void ModifySimulationSystems(ICollection<ISimulationSystem> simulationSystems,
+        void ModifySimulationSystems(
+            ICollection<ISimulationSystem> simulationSystems,
             SimulationSystemsDependencies dependencies);
     }
 }

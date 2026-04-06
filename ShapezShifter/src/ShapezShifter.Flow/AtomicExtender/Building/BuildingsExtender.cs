@@ -8,22 +8,30 @@ namespace ShapezShifter.Flow.Atomic
     {
         private readonly IBuildingBuilder BuildingBuilder;
         private readonly IBuildingGroupBuilder BuildingGroupBuilder;
-        public IEvent<BuildingDefinition> AfterHijack => _AfterExtensionApplied;
+
+        public IEvent<BuildingDefinition> AfterHijack
+        {
+            get { return _AfterExtensionApplied; }
+        }
+
         private readonly MultiRegisterEvent<BuildingDefinition> _AfterExtensionApplied = new();
 
-        public BuildingsExtender(IBuildingBuilder buildingBuilder,
-            IBuildingGroupBuilder buildingGroupBuilder)
+        public BuildingsExtender(IBuildingBuilder buildingBuilder, IBuildingGroupBuilder buildingGroupBuilder)
         {
             BuildingBuilder = buildingBuilder;
             BuildingGroupBuilder = buildingGroupBuilder;
         }
 
-        public GameBuildings ModifyGameBuildings(MetaGameModeBuildings metaBuildings,
+        public GameBuildings ModifyGameBuildings(
+            MetaGameModeBuildings metaBuildings,
             GameBuildings gameBuildings,
-            IMeshCache meshCache, VisualThemeBaseResources theme)
+            IMeshCache meshCache,
+            VisualThemeBaseResources theme)
         {
             BuildingDefinitionGroup buildingGroup = BuildingGroupBuilder.BuildAndRegister(gameBuildings);
-            BuildingDefinition building = BuildingBuilder.BuildAndRegister(buildingGroup, gameBuildings);
+            BuildingDefinition building = BuildingBuilder.BuildAndRegister(
+                group: buildingGroup,
+                gameBuildings: gameBuildings);
 
             _AfterExtensionApplied.Invoke(building);
             return gameBuildings;

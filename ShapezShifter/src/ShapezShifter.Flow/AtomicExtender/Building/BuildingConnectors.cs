@@ -22,28 +22,29 @@ namespace ShapezShifter.Flow.Atomic
 
         public ISingleTileConnectorDataBuilder AddShapeInput(ShapeConnectorConfig shapeConnectorConfig)
         {
-            BuildingConnectors.Add(new BuildingItemInput
-            {
-                Position_L = TileVector.Zero,
-                Direction_L = shapeConnectorConfig.Direction.Value,
-                StandType = shapeConnectorConfig.StandType,
-                IOType = shapeConnectorConfig.CapsType,
-                Seperators = shapeConnectorConfig.Separators
-            });
+            BuildingConnectors.Add(
+                new BuildingItemInput
+                {
+                    Position_L = TileVector.Zero,
+                    Direction_L = shapeConnectorConfig.Direction.Value,
+                    StandType = shapeConnectorConfig.StandType,
+                    IOType = shapeConnectorConfig.CapsType,
+                    Seperators = shapeConnectorConfig.Separators
+                });
             return this;
         }
 
-
         public ISingleTileConnectorDataBuilder AddShapeOutput(ShapeConnectorConfig shapeConnectorConfig)
         {
-            BuildingConnectors.Add(new BuildingItemOutput
-            {
-                Position_L = TileVector.Zero,
-                Direction_L = shapeConnectorConfig.Direction.Value,
-                StandType = shapeConnectorConfig.StandType,
-                IOType = shapeConnectorConfig.CapsType,
-                Seperators = shapeConnectorConfig.Separators
-            });
+            BuildingConnectors.Add(
+                new BuildingItemOutput
+                {
+                    Position_L = TileVector.Zero,
+                    Direction_L = shapeConnectorConfig.Direction.Value,
+                    StandType = shapeConnectorConfig.StandType,
+                    IOType = shapeConnectorConfig.CapsType,
+                    Seperators = shapeConnectorConfig.Separators
+                });
             return this;
         }
 
@@ -55,11 +56,10 @@ namespace ShapezShifter.Flow.Atomic
                     Position_L = TileVector.Zero,
                     Direction_L = wireConnectorConfig.Direction.Value,
                     _IOType = wireConnectorConfig.IoType,
-                    TileDirection =  wireConnectorConfig.Direction,
+                    TileDirection = wireConnectorConfig.Direction
                 });
             return this;
         }
-
 
         public ISingleTileConnectorDataBuilder AddWireOutput(WireConnectorConfig wireConnectorConfig)
         {
@@ -69,7 +69,7 @@ namespace ShapezShifter.Flow.Atomic
                     Position_L = TileVector.Zero,
                     Direction_L = wireConnectorConfig.Direction.Value,
                     _IOType = wireConnectorConfig.IoType,
-                    TileDirection =  wireConnectorConfig.Direction,
+                    TileDirection = wireConnectorConfig.Direction
                 });
             return this;
         }
@@ -104,29 +104,35 @@ namespace ShapezShifter.Flow.Atomic
         {
             TileVector[] tiles = { TileVector.Zero };
 
-            LocalTileBounds tileBounds = new(TileVector.Zero, TileVector.Zero);
+            LocalTileBounds tileBounds = new(min: TileVector.Zero, max: TileVector.Zero);
 
             TileDimensions tileDimensions = tileBounds.Dimensions;
-            LocalVector center = LocalVector.Lerp((LocalVector)tileBounds.Min, (LocalVector)tileBounds.Max, 0.5f);
+            LocalVector center = LocalVector.Lerp(
+                a: (LocalVector)tileBounds.Min,
+                b: (LocalVector)tileBounds.Max,
+                t: 0.5f);
 
             return new BuildingConnectorData(
-                BuildingConnectors,
-                tiles,
-                tileBounds,
-                center,
-                tileDimensions);
+                allInputs: BuildingConnectors,
+                tiles: tiles,
+                tileBounds: tileBounds,
+                tileBoundsCenter: center,
+                tileDimensions: tileDimensions);
         }
     }
 
     public interface ISingleTileConnectorDataBuilder
     {
         ISingleTileConnectorDataBuilder AddShapeInput(ShapeConnectorConfig shapeConnectorConfig);
+
         ISingleTileConnectorDataBuilder AddShapeOutput(ShapeConnectorConfig shapeConnectorConfig);
 
         ISingleTileConnectorDataBuilder AddWireInput(WireConnectorConfig wireConnectorConfig);
+
         ISingleTileConnectorDataBuilder AddWireOutput(WireConnectorConfig wireConnectorConfig);
 
         ISingleTileConnectorDataBuilder AddFluidInput(FluidConnectorConfig fluidConnectorConfig);
+
         ISingleTileConnectorDataBuilder AddFluidOutput(FluidConnectorConfig fluidConnectorConfig);
 
         IBuildingConnectorData Build();

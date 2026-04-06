@@ -7,24 +7,25 @@ namespace ShapezShifter.Flow.Research
 {
     public class ByIdPerScenarioMilestoneSelector : IMilestoneSelector
     {
-        private readonly Func<string, ResearchUpgradeId> MilestoneIdPerScenario;
+        private readonly Func<ScenarioId, ResearchUpgradeId> MilestoneIdPerScenario;
 
-        public ByIdPerScenarioMilestoneSelector(Func<string, ResearchUpgradeId> milestoneIdPerScenario)
+        public ByIdPerScenarioMilestoneSelector(Func<ScenarioId, ResearchUpgradeId> milestoneIdPerScenario)
         {
             MilestoneIdPerScenario = milestoneIdPerScenario;
         }
 
-        public ResearchLevel Select(string scenarioId, IReadOnlyList<ResearchLevel> milestones)
+        public ResearchLevel Select(ScenarioId scenarioId, IReadOnlyList<ResearchLevel> milestones)
         {
             ResearchUpgradeId id = MilestoneIdPerScenario.Invoke(scenarioId);
             try
             {
                 ResearchLevel milestone = milestones.SingleOrDefault(x => x.Id == id);
-                return milestone ?? throw new Exception($"Could not find a milestone with id {MilestoneIdPerScenario}");
+                return milestone
+                       ?? throw new Exception($"Could not find a milestone with id {id} for scenario {scenarioId}");
             }
             catch (InvalidOperationException)
             {
-                throw new Exception($"More than one element match milestone id {id}");
+                throw new Exception($"More than one element match milestone id {id} for scenario {scenarioId}");
             }
         }
     }

@@ -30,12 +30,14 @@ namespace ShapezShifter.Flow
     public interface IBuildingExtensionPromiseWithPlacementAndToolbar
     {
         ISimulatedBuildingExtensionPromise WithSimulation();
+
         ISimulatedBuildingExtensionPromise WithoutSimulation();
     }
 
     public interface ISimulatedBuildingExtensionPromise
     {
         public ICompleteBuildingExtensionBuilder WithEssentialModules();
+
         public ICompleteBuildingExtensionBuilder WithModules(IBuildingModules buildingModules);
     }
 
