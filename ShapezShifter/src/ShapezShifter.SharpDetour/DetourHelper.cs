@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using JetBrains.Annotations;
@@ -1456,18 +1457,58 @@ namespace ShapezShifter.SharpDetour
         internal static MethodInfo GetRuntimeMethod<TObject>(LambdaExpression original)
         {
             string name = ((MethodCallExpression)original.Body).Method.Name;
-            MethodInfo actualMethodBody = typeof(TObject).GetMethod(
-                name,
-                bindingAttr: BindingFlags.Public
-                             | BindingFlags.NonPublic
-                             | BindingFlags.Instance
-                             | BindingFlags.Static);
-            if (actualMethodBody == null)
+
+            try
             {
+                MethodInfo actualMethodBody = typeof(TObject).GetMethod(
+                    name,
+                    bindingAttr: BindingFlags.Public
+                                 | BindingFlags.NonPublic
+                                 | BindingFlags.Instance
+                                 | BindingFlags.Static);
+                if (actualMethodBody == null)
+                {
+                    throw new Exception($"Could not find method {name} in type {typeof(TObject)} during runtime");
+                }
+                return actualMethodBody;
+            }
+            catch (AmbiguousMatchException)
+            {
+                var methods = typeof(TObject).GetMethods(
+                                                  bindingAttr: BindingFlags.Public
+                                                               | BindingFlags.NonPublic
+                                                               | BindingFlags.Instance
+                                                               | BindingFlags.Static)
+                                             .Where(x => x.Name == name);
+                foreach (MethodInfo method in methods)
+                {
+                    if (ReflectedMethodArgumentsMatchExpression(original, method))
+                    {
+                        return method;
+                    }
+                }
                 throw new Exception($"Could not find method {name} in type {typeof(TObject)} during runtime");
             }
+        }
 
-            return actualMethodBody;
+        private static bool ReflectedMethodArgumentsMatchExpression(LambdaExpression expression, MethodInfo method)
+        {
+            var reflectedParams = method.GetParameters();
+            if (reflectedParams.Length != expression.Parameters.Count)
+            {
+                return false;
+            }
+            for (int i = 0; i < expression.Parameters.Count; i++)
+            {
+                ParameterExpression expressionParam = expression.Parameters[i];
+                ParameterInfo methodInfoParam = reflectedParams[i];
+                if (expressionParam.Type == methodInfoParam.ParameterType)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private static MethodInfo GetRuntimeMethod(Type type, LambdaExpression original)
