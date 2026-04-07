@@ -16,24 +16,24 @@ namespace ShapezShifter.Hijack
         {
             RewirerProvider = rewirerProvider;
 
-            CreateSimulationSystemsHook = DetourHelper
-               .CreatePostfixHook<BuiltinSimulationSystems, IEnumerable<ISimulationSystem>>(
-                    builtinSimulationSystems =>
-                        builtinSimulationSystems.CreateSimulationSystems(),
-                    CreateSimulationSystems);
+            CreateSimulationSystemsHook =
+                DetourHelper.CreatePostfixHook<BuiltinSimulationSystems, IEnumerable<ISimulationSystem>>(
+                    original: builtinSimulationSystems => builtinSimulationSystems.CreateSimulationSystems(),
+                    postfix: CreateSimulationSystems);
         }
 
         private IEnumerable<ISimulationSystem> CreateSimulationSystems(
             BuiltinSimulationSystems builtinSimulationSystems,
             IEnumerable<ISimulationSystem> systems)
         {
-            List<ISimulationSystem> systemsList = systems.ToList();
-            IEnumerable<ISimulationSystemsRewirer> simulationSystemsRewirers =
-                RewirerProvider.RewirersOfType<ISimulationSystemsRewirer>();
+            var systemsList = systems.ToList();
+            var simulationSystemsRewirers = RewirerProvider.RewirersOfType<ISimulationSystemsRewirer>();
             SimulationSystemsDependencies dependencies = new(builtinSimulationSystems);
             foreach (ISimulationSystemsRewirer simulationSystemsRewirer in simulationSystemsRewirers)
             {
-                simulationSystemsRewirer.ModifySimulationSystems(systemsList, dependencies);
+                simulationSystemsRewirer.ModifySimulationSystems(
+                    simulationSystems: systemsList,
+                    dependencies: dependencies);
             }
 
             return systemsList;

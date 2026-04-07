@@ -11,21 +11,29 @@ namespace ShapezShifter.Hijack
         private readonly BuildingModulesInterceptor BuildingModulesInterceptor;
         private readonly GameScenarioInterceptor GameScenarioInterceptor;
         private readonly SimulationSystemsInterceptor SimulationSystemsInterceptor;
+        private readonly PredictionSystemsInterceptor PredictionSystemsInterceptor;
         private readonly BuffablesInterceptor BuffablesInterceptor;
         private readonly IslandsInterceptor IslandsInterceptor;
         private readonly IslandModulesInterceptor IslandModulesInterceptor;
+        private readonly SaveDataInterceptor SaveDataInterceptor;
+        private readonly ConsoleInterceptor ConsoleInterceptor;
+        private readonly TickInterceptor TickInterceptor;
 
         public GameInterceptors(IRewirerProvider rewirerProvider, ILogger logger)
         {
             ToolbarInterceptor = new ToolbarInterceptor(rewirerProvider);
             PlacementInterceptor = new PlacementInitiatorsInterceptor(rewirerProvider);
-            BuildingsInterceptor = new BuildingsInterceptor(rewirerProvider, logger);
+            BuildingsInterceptor = new BuildingsInterceptor(rewirerProvider: rewirerProvider, logger: logger);
             BuildingModulesInterceptor = new BuildingModulesInterceptor(rewirerProvider);
-            IslandsInterceptor = new IslandsInterceptor(rewirerProvider, logger);
+            IslandsInterceptor = new IslandsInterceptor(rewirerProvider: rewirerProvider, logger: logger);
             IslandModulesInterceptor = new IslandModulesInterceptor(rewirerProvider);
-            GameScenarioInterceptor = new GameScenarioInterceptor(rewirerProvider, logger);
+            GameScenarioInterceptor = new GameScenarioInterceptor(rewirerProvider: rewirerProvider, logger: logger);
             SimulationSystemsInterceptor = new SimulationSystemsInterceptor(rewirerProvider);
+            PredictionSystemsInterceptor = new PredictionSystemsInterceptor(rewirerProvider);
             BuffablesInterceptor = new BuffablesInterceptor(rewirerProvider);
+            SaveDataInterceptor = new SaveDataInterceptor(rewirerProvider: rewirerProvider, logger: logger);
+            ConsoleInterceptor = new ConsoleInterceptor(rewirerProvider: rewirerProvider, logger: logger);
+            TickInterceptor = new TickInterceptor(rewirerProvider);
         }
 
         public void Dispose()
@@ -36,9 +44,13 @@ namespace ShapezShifter.Hijack
             PlacementInterceptor.Dispose();
             ToolbarInterceptor.Dispose();
             SimulationSystemsInterceptor.Dispose();
+            PredictionSystemsInterceptor.Dispose();
             BuffablesInterceptor.Dispose();
             IslandsInterceptor.Dispose();
             IslandModulesInterceptor.Dispose();
+            SaveDataInterceptor.Dispose();
+            ConsoleInterceptor.Dispose();
+            TickInterceptor.Dispose();
         }
     }
 }

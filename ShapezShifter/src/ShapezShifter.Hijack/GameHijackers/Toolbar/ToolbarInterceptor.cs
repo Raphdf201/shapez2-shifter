@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using MonoMod.RuntimeDetour;
 using ShapezShifter.SharpDetour;
 
@@ -14,21 +13,18 @@ namespace ShapezShifter.Hijack
         public ToolbarInterceptor(IRewirerProvider rewirerProvider)
         {
             RewirerProvider = rewirerProvider;
-            ModifyToolbarDataHook = DetourHelper
-               .CreatePrefixHook<ToolbarBuilder, ToolbarData, IParentToolbarElement>(
-                    (t, a) => t.BuildToolbar(a),
-                    ModifyToolbarData);
+            ModifyToolbarDataHook = DetourHelper.CreatePrefixHook<ToolbarBuilder, ToolbarData, IParentToolbarElement>(
+                original: (t, a) => t.BuildToolbar(a),
+                prefix: ModifyToolbarData);
 
-            ModifyToolbarModelHook = DetourHelper
-               .CreatePostfixHook<ToolbarBuilder, ToolbarData, IParentToolbarElement>(
-                    (t, a) => t.BuildToolbar(a),
-                    ModifyToolbarModel);
+            ModifyToolbarModelHook = DetourHelper.CreatePostfixHook<ToolbarBuilder, ToolbarData, IParentToolbarElement>(
+                original: (t, a) => t.BuildToolbar(a),
+                postfix: ModifyToolbarModel);
         }
 
         private ToolbarData ModifyToolbarData(ToolbarBuilder builder, ToolbarData toolbarData)
         {
-            IEnumerable<IToolbarDataRewirer> toolbarDataRewirers =
-                RewirerProvider.RewirersOfType<IToolbarDataRewirer>();
+            var toolbarDataRewirers = RewirerProvider.RewirersOfType<IToolbarDataRewirer>();
 
             foreach (IToolbarDataRewirer toolbarDataRewirer in toolbarDataRewirers)
             {
@@ -38,12 +34,12 @@ namespace ShapezShifter.Hijack
             return toolbarData;
         }
 
-
-        private IParentToolbarElement ModifyToolbarModel(ToolbarBuilder builder, ToolbarData data,
+        private IParentToolbarElement ModifyToolbarModel(
+            ToolbarBuilder builder,
+            ToolbarData data,
             IParentToolbarElement toolbar)
         {
-            IEnumerable<IToolbarModelRewirer> toolbarModelRewirers =
-                RewirerProvider.RewirersOfType<IToolbarModelRewirer>();
+            var toolbarModelRewirers = RewirerProvider.RewirersOfType<IToolbarModelRewirer>();
 
             foreach (IToolbarModelRewirer toolbarModelRewirer in toolbarModelRewirers)
             {

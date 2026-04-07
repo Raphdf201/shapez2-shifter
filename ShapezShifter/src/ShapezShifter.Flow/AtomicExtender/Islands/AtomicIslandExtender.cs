@@ -1,4 +1,5 @@
 using System;
+using Core.Logging;
 using Game.Core.Simulation;
 using ShapezShifter.Flow.Research;
 using ShapezShifter.Flow.Toolbar;
@@ -6,16 +7,18 @@ using ShapezShifter.Hijack;
 
 namespace ShapezShifter.Flow.Atomic
 {
-    public class AtomicIslandExtender :
-        IBaseIslandExtender,
-        IScenarioSelectiveIslandExtender,
-        IDefinedIslandExtender,
-        IDefinedPlaceableIslandExtender,
-        IDefinedPlaceableAccessibleIslandExtender,
-        IDefinedSimulatableIslandExtender,
-        IDefinedSimulatablePlaceableIslandExtender,
-        IAtomicIslandExtender,
-        IIslandExtender, IDefinedUnlockableIslandExtender
+    public class AtomicIslandExtender
+        : IBaseIslandExtender,
+          IScenarioSelectiveIslandExtender,
+          IDefinedIslandExtender,
+          IDefinedPlaceableIslandExtender,
+          IDefinedPlaceableAccessibleIslandExtender,
+          IDefinedSimulatableIslandExtender,
+          IDefinedSimulatablePlaceableIslandExtender,
+          IAtomicIslandExtender,
+          IIslandExtender,
+          IDefinedUnlockableIslandExtender,
+          IDefinedAccessibleSimulatablePlaceableIslandExtender
     {
         // If each interface would have a specialized implementor, these fields could become
         // read-only. However that would create a lot of extra boiler-plate code
@@ -27,6 +30,7 @@ namespace ShapezShifter.Flow.Atomic
         private IIslandBuilder IslandBuilder;
         private IIslandGroupBuilder IslandGroupBuilder;
         private ISimulationExtender LazySimulationExtender;
+        private ISimulationExtender LazyPredictionExtender;
         private IIslandResearchProgressionExtender ProgressionExtender;
 
         public IScenarioSelectiveIslandExtender SpecificScenarios(ScenarioSelector scenarioFilter)
@@ -46,8 +50,7 @@ namespace ShapezShifter.Flow.Atomic
             }
         }
 
-        public IDefinedIslandExtender WithIsland(IIslandBuilder island,
-            IIslandGroupBuilder islandGroup)
+        public IDefinedIslandExtender WithIsland(IIslandBuilder island, IIslandGroupBuilder islandGroup)
         {
             IslandBuilder = island;
             IslandGroupBuilder = islandGroup;
@@ -66,21 +69,21 @@ namespace ShapezShifter.Flow.Atomic
             return this;
         }
 
-        public IAtomicIslandExtender WithSimulation
-            <TSimulation>(IFactoryBuilder<TSimulation> factoryBuilder)
+        public IAtomicIslandExtender WithSimulation<TSimulation>(
+            IBuildingSimulationFactoryBuilder<TSimulation> buildingSimulationFactoryBuilder)
             where TSimulation : ISimulation
         {
-            LazySimulationExtender =
-                new TypedSimulationExtender<TSimulation>(factoryBuilder);
+            LazySimulationExtender = new TypedSimulationExtender<TSimulation>(buildingSimulationFactoryBuilder);
             return this;
         }
 
-        public IAtomicIslandExtender WithSimulation
-            <TSimulation, TState, TConfig>(IFactoryBuilder<TSimulation, TState, TConfig> factoryBuilder)
-            where TSimulation : Simulation<TState> where TState : class, ISimulationState, new()
+        public IAtomicIslandExtender WithSimulation<TSimulation, TState, TConfig>(
+            IIslandSimulationFactoryBuilder<TSimulation, TState, TConfig> simulationFactoryBuilder)
+            where TSimulation : Simulation<TState>
+            where TState : class, ISimulationState, new()
         {
             LazySimulationExtender =
-                new TypedSimulationExtender<TSimulation, TState, TConfig>(factoryBuilder);
+                new TypedSimulationExtender<TSimulation, TState, TConfig>(simulationFactoryBuilder);
             return this;
         }
 
@@ -94,21 +97,18 @@ namespace ShapezShifter.Flow.Atomic
             return this;
         }
 
-        public IAtomicIslandExtender WithSimulation
-            <TSimulation, TConfig, TBaseConfiguration, TSimulationConfiguration>(
-                IFactoryBuilder<TSimulation, TConfig, TBaseConfiguration> factoryBuilder)
+        public IAtomicIslandExtender WithSimulation<TSimulation, TConfig, TBaseConfiguration, TSimulationConfiguration>(
+            IIslandSimulationFactoryBuilder<TSimulation, TConfig, TBaseConfiguration> simulationFactoryBuilder)
         {
             throw new NotImplementedException();
         }
 
-
-        IDefinedSimulatablePlaceableIslandExtender IDefinedSimulatableIslandExtender.
-            WithDefaultPlacement()
+        IDefinedSimulatablePlaceableIslandExtender IDefinedSimulatableIslandExtender.WithDefaultPlacement()
         {
             return this;
         }
 
-        IAtomicIslandExtender IDefinedSimulatablePlaceableIslandExtender.InToolbar(
+        IDefinedAccessibleSimulatablePlaceableIslandExtender IDefinedSimulatablePlaceableIslandExtender.InToolbar(
             IToolbarEntryInsertLocation toolbarEntryInsertLocation)
         {
             ToolbarEntryInsertLocation = toolbarEntryInsertLocation;
@@ -127,7 +127,6 @@ namespace ShapezShifter.Flow.Atomic
             return this;
         }
 
-
         public void Build()
         {
             BuildExtenders();
@@ -142,14 +141,14 @@ namespace ShapezShifter.Flow.Atomic
             {
                 // Start the chain of extenders with the scenario extender. This also serves as a filter for only
                 // applying the other extenders if the scenario is part of the filter 
-                RewirerChainLink scenarioRewirer = RewirerChain
-                   .BeginRewiringWith(new GameScenarioIslandExtender(ScenarioFilter,
-                        ProgressionExtender,
-                        IslandGroupBuilder.GroupId));
+                RewirerChainLink scenarioRewirer = RewirerChain.BeginRewiringWith(
+                    new GameScenarioIslandExtender(
+                        scenarioFilter: ScenarioFilter,
+                        progressionExtender: ProgressionExtender,
+                        groupId: IslandGroupBuilder.GroupId));
 
                 // Then add the island group and island to the game islands object
-                RewirerChainLink<IslandDefinition> islandRewirer =
-                    scenarioRewirer.ThenContinueRewiringWith(BuildIslandExtender);
+                var islandRewirer = scenarioRewirer.ThenContinueRewiringWith(BuildIslandExtender);
 
                 RewirerChainLink simulationsRewirer = null;
                 if (LazySimulationExtender != null)
@@ -158,26 +157,37 @@ namespace ShapezShifter.Flow.Atomic
                     simulationsRewirer = LazySimulationExtender.ContinueAfter(islandRewirer);
                 }
 
+                RewirerChainLink predictionsRewirer = null;
+                if (LazyPredictionExtender != null)
+                {
+                    predictionsRewirer = LazyPredictionExtender.ContinueAfter(islandRewirer);
+                }
+
                 // With the island, create the placement
-                RewirerChainLink<IslandPlacementResult> placementRewirer =
-                    islandRewirer.ThenContinueRewiringWith(BuildDefaultPlacementExtender);
+                var placementRewirer = islandRewirer.ThenContinueRewiringWith(BuildDefaultPlacementExtender);
 
                 // And with the placement, create a toolbar entry
-                RewirerChainLink<PlacementToolbarElementData> toolbarRewirer =
+                var toolbarRewirer =
                     placementRewirer.ThenContinueRewiringWith(BuildToolbarExtender(ToolbarEntryInsertLocation));
 
                 // And finally add the modules
-                RewirerChainLink modulesRewirer =
-                    islandRewirer.ThenContinueRewiringWith(BuildModulesExtender);
+                RewirerChainLink modulesRewirer = islandRewirer.ThenContinueRewiringWith(BuildModulesExtender);
 
                 // When all extenders are called (noticed that the specific order does not matter), the process is
                 // restarted
-                IWaitAllRewirers modulesAndToolbar = AggregatedChain
-                   .WaitFor(modulesRewirer)
-                   .And(toolbarRewirer);
+                IWaitAllRewirers modulesAndToolbar = AggregatedChain.WaitFor(modulesRewirer).And(toolbarRewirer);
 
-                IWaitAllRewirers allRewirersToWait =
-                    simulationsRewirer == null ? modulesAndToolbar : modulesAndToolbar.And(simulationsRewirer);
+                IWaitAllRewirers allRewirersToWait = modulesAndToolbar;
+                if (simulationsRewirer != null)
+                {
+                    allRewirersToWait = allRewirersToWait.And(simulationsRewirer);
+                }
+
+                if (predictionsRewirer != null)
+                {
+                    allRewirersToWait = allRewirersToWait.And(predictionsRewirer);
+                }
+
                 allRewirersToWait.AfterHijack.Register(OnApplyAllExtenders);
                 return;
 
@@ -191,11 +201,10 @@ namespace ShapezShifter.Flow.Atomic
 
         private IslandsExtender BuildIslandExtender()
         {
-            return new IslandsExtender(IslandBuilder, IslandGroupBuilder);
+            return new IslandsExtender(islandBuilder: IslandBuilder, islandGroupBuilder: IslandGroupBuilder);
         }
 
-        private DefaultIslandPlacementExtender BuildDefaultPlacementExtender(
-            IslandDefinition def)
+        private DefaultIslandPlacementExtender BuildDefaultPlacementExtender(IslandDefinition def)
         {
             return new DefaultIslandPlacementExtender(def);
         }
@@ -205,87 +214,158 @@ namespace ShapezShifter.Flow.Atomic
         {
             return BuildToolbarExtenderFunc;
 
-            ToolbarRewirer BuildToolbarExtenderFunc(
-                IslandPlacementResult placementResult)
+            ToolbarRewirer BuildToolbarExtenderFunc(IslandPlacementResult placementResult)
             {
                 PlacementInitiatorId placement = placementResult.InitiatorId;
-                IIslandDefinitionGroup group = placementResult.Island.CustomData.Get<IIslandDefinitionGroup>();
+                var group = placementResult.Island.CustomData.Get<IIslandDefinitionGroup>();
 
-                GroupPresentationData presentation = group.CustomData.Get<GroupPresentationData>();
+                var presentation = group.CustomData.Get<GroupPresentationData>();
 
-                return new ToolbarRewirer(placement,
-                    presentation.Title,
-                    presentation.Description,
-                    presentation.Icon,
-                    entryInsertLocation);
+                return new ToolbarRewirer(
+                    placement: placement,
+                    title: presentation.Title,
+                    description: presentation.Description,
+                    icon: presentation.Icon,
+                    entryInsertLocation: entryInsertLocation);
             }
         }
 
         private Func<IslandDefinition, IslandSimulationExtender<TSimulation, TState, TConfig>>
             BuildSimulationExtender<TSimulation, TState, TConfig>(
-                IFactoryBuilder<TSimulation, TState, TConfig> factoryBuilder)
-            where TSimulation : Simulation<TState> where TState : class, ISimulationState, new()
+                IIslandSimulationFactoryBuilder<TSimulation, TState, TConfig> simulationFactoryBuilder)
+            where TSimulation : Simulation<TState>
+            where TState : class, ISimulationState, new()
         {
             return BuildToolbarExtenderFunc;
 
             IslandSimulationExtender<TSimulation, TState, TConfig> BuildToolbarExtenderFunc(
                 IslandDefinition islandDefinition)
             {
-                return new IslandSimulationExtender<TSimulation, TState, TConfig>(islandDefinition.Id,
-                    factoryBuilder);
+                return new IslandSimulationExtender<TSimulation, TState, TConfig>(
+                    definitionId: islandDefinition.Id,
+                    simulationFactoryBuilder: simulationFactoryBuilder);
             }
         }
 
-
         private IChainableRewirer BuildModulesExtender(IslandDefinition islandDefinition)
         {
-            return new IslandModulesExtender(islandDefinition, ModulesData);
+            return new IslandModulesExtender(buildingDefinition: islandDefinition, data: ModulesData);
         }
 
         private class TypedSimulationExtender<TSimulation> : ISimulationExtender
             where TSimulation : ISimulation
 
         {
-            private readonly IFactoryBuilder<TSimulation> FactoryBuilder;
+            private readonly IBuildingSimulationFactoryBuilder<TSimulation> BuildingSimulationFactoryBuilder;
 
-            public TypedSimulationExtender(IFactoryBuilder<TSimulation> factoryBuilder)
+            public TypedSimulationExtender(
+                IBuildingSimulationFactoryBuilder<TSimulation> buildingSimulationFactoryBuilder)
             {
-                FactoryBuilder = factoryBuilder;
+                BuildingSimulationFactoryBuilder = buildingSimulationFactoryBuilder;
             }
 
             public RewirerChainLink ContinueAfter(RewirerChainLink<IslandDefinition> rewirerChainLink)
             {
                 return rewirerChainLink.ThenContinueRewiringWith(BuildToolbarExtenderFunc);
 
-                IslandSimulationExtender<TSimulation> BuildToolbarExtenderFunc(
-                    IslandDefinition islandDefinition)
+                IslandSimulationExtender<TSimulation> BuildToolbarExtenderFunc(IslandDefinition islandDefinition)
                 {
-                    return new IslandSimulationExtender<TSimulation>(islandDefinition.Id, FactoryBuilder);
+                    return new IslandSimulationExtender<TSimulation>(
+                        definitionId: islandDefinition.Id,
+                        buildingSimulationFactoryBuilder: BuildingSimulationFactoryBuilder);
                 }
             }
         }
 
         private class TypedSimulationExtender<TSimulation, TState, TConfig> : ISimulationExtender
-            where TSimulation : Simulation<TState> where TState : class, ISimulationState, new()
+            where TSimulation : Simulation<TState>
+            where TState : class, ISimulationState, new()
 
         {
-            private readonly IFactoryBuilder<TSimulation, TState, TConfig> FactoryBuilder;
+            private readonly IIslandSimulationFactoryBuilder<TSimulation, TState, TConfig> SimulationFactoryBuilder;
 
-            public TypedSimulationExtender(IFactoryBuilder<TSimulation, TState, TConfig> factoryBuilder)
+            public TypedSimulationExtender(
+                IIslandSimulationFactoryBuilder<TSimulation, TState, TConfig> simulationFactoryBuilder)
             {
-                FactoryBuilder = factoryBuilder;
+                SimulationFactoryBuilder = simulationFactoryBuilder;
             }
 
             public RewirerChainLink ContinueAfter(RewirerChainLink<IslandDefinition> rewirerChainLink)
             {
                 return rewirerChainLink.ThenContinueRewiringWith(BuildToolbarExtenderFunc)
-                   .ThenContinueRewiringWith(BuildBuffablesExtender);
+                                       .ThenContinueRewiringWith(BuildBuffablesExtender);
 
                 IslandSimulationExtender<TSimulation, TState, TConfig> BuildToolbarExtenderFunc(
                     IslandDefinition islandDefinition)
                 {
-                    return new IslandSimulationExtender<TSimulation, TState, TConfig>(islandDefinition.Id,
-                        FactoryBuilder);
+                    return new IslandSimulationExtender<TSimulation, TState, TConfig>(
+                        definitionId: islandDefinition.Id,
+                        simulationFactoryBuilder: SimulationFactoryBuilder);
+                }
+
+                IChainableRewirer BuildBuffablesExtender(TConfig config)
+                {
+                    return new BuffablesExtender<TConfig>(config);
+                }
+            }
+        }
+
+        private class TypedPredictionExtender<TSimulation> : ISimulationExtender
+            where TSimulation : ISimulation
+
+        {
+            private readonly IIslandPredictionFactoryBuilder<TSimulation> IslandSimulationFactoryBuilder;
+            private readonly ILogger Logger;
+
+            public TypedPredictionExtender(
+                IIslandPredictionFactoryBuilder<TSimulation> islandSimulationFactoryBuilder,
+                ILogger logger)
+            {
+                IslandSimulationFactoryBuilder = islandSimulationFactoryBuilder;
+                Logger = logger;
+            }
+
+            public RewirerChainLink ContinueAfter(RewirerChainLink<IslandDefinition> rewirerChainLink)
+            {
+                return rewirerChainLink.ThenContinueRewiringWith(BuildToolbarExtenderFunc);
+
+                IslandPredictionExtender<TSimulation> BuildToolbarExtenderFunc(IslandDefinition islandDefinition)
+                {
+                    return new IslandPredictionExtender<TSimulation>(
+                        definitionId: islandDefinition.Id,
+                        islandSimulationFactoryBuilder: IslandSimulationFactoryBuilder,
+                        logger: Logger);
+                }
+            }
+        }
+
+        private class TypedPredictionExtender<TSimulation, TConfig> : ISimulationExtender
+            where TSimulation : ISimulation
+
+        {
+            private readonly IIslandPredictionFactoryBuilder<TSimulation, TConfig> IslandSimulationFactoryBuilder;
+            private readonly ILogger Logger;
+
+            public TypedPredictionExtender(
+                IIslandPredictionFactoryBuilder<TSimulation, TConfig> islandSimulationFactoryBuilder,
+                ILogger logger)
+            {
+                IslandSimulationFactoryBuilder = islandSimulationFactoryBuilder;
+                Logger = logger;
+            }
+
+            public RewirerChainLink ContinueAfter(RewirerChainLink<IslandDefinition> rewirerChainLink)
+            {
+                return rewirerChainLink.ThenContinueRewiringWith(BuildToolbarExtenderFunc)
+                                       .ThenContinueRewiringWith(BuildBuffablesExtender);
+
+                IslandPredictionExtender<TSimulation, TConfig> BuildToolbarExtenderFunc(
+                    IslandDefinition islandDefinition)
+                {
+                    return new IslandPredictionExtender<TSimulation, TConfig>(
+                        definitionId: islandDefinition.Id,
+                        buildingSimulationFactoryBuilder: IslandSimulationFactoryBuilder,
+                        logger: Logger);
                 }
 
                 IChainableRewirer BuildBuffablesExtender(TConfig config)
@@ -306,8 +386,8 @@ namespace ShapezShifter.Flow.Atomic
             return this;
         }
 
-        public IDefinedUnlockableIslandExtender
-            UnlockedWithNewSideUpgrade(IPresentableUnlockableSideUpgradeBuilder sideUpgradeBuilder)
+        public IDefinedUnlockableIslandExtender UnlockedWithNewSideUpgrade(
+            IPresentableUnlockableSideUpgradeBuilder sideUpgradeBuilder)
         {
             ProgressionExtender = new UnlockIslandWithNewSideUpgradeResearchProgressionExtender(sideUpgradeBuilder);
             return this;
@@ -320,8 +400,34 @@ namespace ShapezShifter.Flow.Atomic
                 new UnlockIslandWithExistingSideUpgradeResearchProgressionExtender(sideUpgradeSelector);
             return this;
         }
-    }
 
+        public IAtomicIslandExtender WithPrediction<TPrediction>(
+            IIslandPredictionFactoryBuilder<TPrediction> predictionBuilder,
+            ILogger logger)
+            where TPrediction : ISimulation
+        {
+            LazyPredictionExtender = new TypedPredictionExtender<TPrediction>(
+                islandSimulationFactoryBuilder: predictionBuilder,
+                logger: logger);
+            return this;
+        }
+
+        public IAtomicIslandExtender WithPrediction<TPrediction, TConfig>(
+            IIslandPredictionFactoryBuilder<TPrediction, TConfig> predictionBuilder,
+            ILogger logger)
+            where TPrediction : ISimulation
+        {
+            LazyPredictionExtender = new TypedPredictionExtender<TPrediction, TConfig>(
+                islandSimulationFactoryBuilder: predictionBuilder,
+                logger: logger);
+            return this;
+        }
+
+        public IAtomicIslandExtender WithoutPrediction(IToolbarEntryInsertLocation entryInsertLocation)
+        {
+            throw new NotImplementedException();
+        }
+    }
 
     public interface IBaseIslandExtender
     {
@@ -333,10 +439,8 @@ namespace ShapezShifter.Flow.Atomic
     // Scenario
     public interface IScenarioSelectiveIslandExtender
     {
-        IDefinedIslandExtender WithIsland(IIslandBuilder island,
-            IIslandGroupBuilder islandGroup);
+        IDefinedIslandExtender WithIsland(IIslandBuilder island, IIslandGroupBuilder islandGroup);
     }
-
 
     // Scenario -> Island
     public interface IDefinedIslandExtender
@@ -354,50 +458,43 @@ namespace ShapezShifter.Flow.Atomic
         IDefinedPlaceableIslandExtender WithDefaultPlacement();
 
         IAtomicIslandExtender WithSimulation<TSimulation>(
-            IFactoryBuilder<TSimulation> factoryBuilder)
+            IBuildingSimulationFactoryBuilder<TSimulation> buildingSimulationFactoryBuilder)
             where TSimulation : ISimulation;
 
-        IAtomicIslandExtender WithSimulation<TSimulation,
-            TState, TConfig>(
-            IFactoryBuilder<TSimulation, TState, TConfig> factoryBuilder)
-            where TSimulation : Simulation<TState> where TState : class, ISimulationState, new();
+        IAtomicIslandExtender WithSimulation<TSimulation, TState, TConfig>(
+            IIslandSimulationFactoryBuilder<TSimulation, TState, TConfig> simulationFactoryBuilder)
+            where TSimulation : Simulation<TState>
+            where TState : class, ISimulationState, new();
 
         IAtomicIslandExtender WithoutSimulation();
 
-        IAtomicIslandExtender WithSimulation<
-            TSimulation,
-            TState, TBaseConfiguration, TSimulationConfiguration>(
-            IFactoryBuilder<TSimulation, TState, TBaseConfiguration> factoryBuilder);
+        IAtomicIslandExtender WithSimulation<TSimulation, TState, TBaseConfiguration, TSimulationConfiguration>(
+            IIslandSimulationFactoryBuilder<TSimulation, TState, TBaseConfiguration> simulationFactoryBuilder);
     }
-
 
     // Scenario -> Island -> Placement
     public interface IDefinedPlaceableIslandExtender
     {
-        IDefinedPlaceableAccessibleIslandExtender InToolbar(
-            IToolbarEntryInsertLocation entryInsertLocation);
+        IDefinedPlaceableAccessibleIslandExtender InToolbar(IToolbarEntryInsertLocation entryInsertLocation);
     }
 
     // Scenario -> Island -> Placement -> Toolbar
     public interface IDefinedPlaceableAccessibleIslandExtender
     {
         IAtomicIslandExtender WithSimulation<TSimulation>(
-            IFactoryBuilder<TSimulation> factoryBuilder)
+            IBuildingSimulationFactoryBuilder<TSimulation> buildingSimulationFactoryBuilder)
             where TSimulation : ISimulation;
 
-        IAtomicIslandExtender WithSimulation<TSimulation,
-            TState, TConfig>(
-            IFactoryBuilder<TSimulation, TState, TConfig> factoryBuilder)
-            where TSimulation : Simulation<TState> where TState : class, ISimulationState, new();
+        IAtomicIslandExtender WithSimulation<TSimulation, TState, TConfig>(
+            IIslandSimulationFactoryBuilder<TSimulation, TState, TConfig> simulationFactoryBuilder)
+            where TSimulation : Simulation<TState>
+            where TState : class, ISimulationState, new();
 
         IAtomicIslandExtender WithoutSimulation();
 
-        IAtomicIslandExtender WithSimulation<
-            TSimulation,
-            TState, TBaseConfiguration, TSimulationConfiguration>(
-            IFactoryBuilder<TSimulation, TState, TBaseConfiguration> factoryBuilder);
+        IAtomicIslandExtender WithSimulation<TSimulation, TState, TBaseConfiguration, TSimulationConfiguration>(
+            IIslandSimulationFactoryBuilder<TSimulation, TState, TBaseConfiguration> simulationFactoryBuilder);
     }
-
 
     // Scenario -> Island -> Simulation -> Buff
     public interface IDefinedSimulatableIslandExtender
@@ -408,12 +505,28 @@ namespace ShapezShifter.Flow.Atomic
     // Scenario -> Island -> Simulation -> Buff -> Placement
     public interface IDefinedSimulatablePlaceableIslandExtender
     {
-        IAtomicIslandExtender InToolbar(IToolbarEntryInsertLocation entryInsertLocation);
+        IDefinedAccessibleSimulatablePlaceableIslandExtender InToolbar(IToolbarEntryInsertLocation entryInsertLocation);
+    }
+
+    public interface IDefinedAccessibleSimulatablePlaceableIslandExtender
+    {
+        public IAtomicIslandExtender WithPrediction<TPrediction>(
+            IIslandPredictionFactoryBuilder<TPrediction> predictionBuilder,
+            ILogger logger)
+            where TPrediction : ISimulation;
+
+        public IAtomicIslandExtender WithPrediction<TPrediction, TConfig>(
+            IIslandPredictionFactoryBuilder<TPrediction, TConfig> predictionBuilder,
+            ILogger logger)
+            where TPrediction : ISimulation;
+
+        IAtomicIslandExtender WithoutPrediction(IToolbarEntryInsertLocation entryInsertLocation);
     }
 
     public interface IAtomicIslandExtender
     {
         IIslandExtender WithCustomModules(IIslandModuleDataProvider islandModules);
+
         IIslandExtender WithoutModules();
     }
 

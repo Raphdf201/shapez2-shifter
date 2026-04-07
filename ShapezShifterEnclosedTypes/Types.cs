@@ -1,16 +1,23 @@
-namespace ShapezShifterTestsThirdParty;
-
-public sealed class PrivateMembersTestClass(int field)
+namespace ShapezShifterTestsThirdParty
 {
-    // ReSharper disable once ReplaceWithPrimaryConstructorParameter
-    private readonly int Field = field;
+    public sealed class PrivateMembersTestClass(int field)
+    {
+        // ReSharper disable once ReplaceWithPrimaryConstructorParameter
+        private readonly int Field = field;
 
-    private int Property => Field * 2;
-}
+        private int Property
+        {
+            get { return Field * 2; }
+        }
+    }
 
-public readonly struct PrivateMembersTestStructure(int field)
-{
-    private int Property => Field * 2;
+    public readonly struct PrivateMembersTestStructure(int field)
+    {
+        private int Property
+        {
+            get { return Field * 2; }
+        }
 
-    private readonly int Field = field;
+        private readonly int Field = field;
+    }
 }

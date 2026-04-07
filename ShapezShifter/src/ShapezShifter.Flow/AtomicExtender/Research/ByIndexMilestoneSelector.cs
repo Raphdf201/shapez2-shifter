@@ -12,7 +12,7 @@ namespace ShapezShifter.Flow.Research
             Index = index;
         }
 
-        public ResearchLevel Select(string scenarioId, IReadOnlyList<ResearchLevel> milestones)
+        public ResearchLevel Select(ScenarioId scenarioId, IReadOnlyList<ResearchLevel> milestones)
         {
             return milestones[Index];
         }

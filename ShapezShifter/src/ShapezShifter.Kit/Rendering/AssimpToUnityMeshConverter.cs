@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using Assimp;
 using Unity.Collections;
 using Unity.Mathematics;
@@ -11,31 +10,27 @@ namespace ShapezShifter.Kit
     {
         public static Mesh ConvertStaticMesh(Assimp.Mesh source)
         {
-            Mesh target = new()
-            {
-                name = source.m_name
-            };
+            Mesh target = new() { name = source.Name };
 
-            ConvertVertices(source, target);
+            ConvertVertices(source: source, target: target);
 
-            ConvertFaces(source, target);
+            ConvertFaces(source: source, target: target);
 
-            ConvertNormals(source, target);
+            ConvertNormals(source: source, target: target);
 
-            ConvertUVs(source, target);
+            ConvertUVs(source: source, target: target);
 
             return target;
         }
 
-
         private static void ConvertVertices(Assimp.Mesh source, Mesh target)
         {
             // TODO: this can be drastically optimized using the native pointers, but careful with the X axis flipping
-            var meshVertices = new NativeArray<float3>(source.m_vertices.Count, Allocator.Temp);
-            for (int i = 0; i < source.m_vertices.Count; i++)
+            var meshVertices = new NativeArray<float3>(length: source.Vertices.Count, allocator: Allocator.Temp);
+            for (int i = 0; i < source.Vertices.Count; i++)
             {
-                Vector3D v = source.m_vertices[i];
-                meshVertices[i] = new float3(-v.X, v.Y, v.Z);
+                Vector3D v = source.Vertices[i];
+                meshVertices[i] = new float3(x: -v.X, y: v.Y, z: v.Z);
             }
 
             target.SetVertices(meshVertices);
@@ -45,9 +40,9 @@ namespace ShapezShifter.Kit
         {
             using var indices = new NativeList<int>(Allocator.Temp);
 
-            for (int i = 0; i < source.m_faces.Count; i++)
+            for (int i = 0; i < source.Faces.Count; i++)
             {
-                Face f = source.m_faces[i];
+                Face f = source.Faces[i];
                 if (f.IndexCount != 3)
                 {
                     // Ignore anything that is not a triangle
@@ -59,16 +54,16 @@ namespace ShapezShifter.Kit
                 indices.Add(f.Indices[0]);
             }
 
-            target.SetIndices(indices.AsArray(), MeshTopology.Triangles, 0);
+            target.SetIndices(indices: indices.AsArray(), topology: MeshTopology.Triangles, submesh: 0);
         }
 
         private static void ConvertNormals(Assimp.Mesh source, Mesh target)
         {
-            var meshNormals = new NativeArray<float3>(source.m_normals.Count, Allocator.Temp);
-            for (int i = 0; i < source.m_normals.Count; i++)
+            var meshNormals = new NativeArray<float3>(length: source.Normals.Count, allocator: Allocator.Temp);
+            for (int i = 0; i < source.Normals.Count; i++)
             {
-                Vector3D n = source.m_normals[i];
-                meshNormals[i] = new float3(-n.X, n.Y, n.Z);
+                Vector3D n = source.Normals[i];
+                meshNormals[i] = new float3(x: -n.X, y: n.Y, z: n.Z);
             }
 
             target.SetNormals(meshNormals);
@@ -76,23 +71,23 @@ namespace ShapezShifter.Kit
 
         private static void ConvertUVs(Assimp.Mesh source, Mesh target)
         {
-            for (int channel = 0; channel < source.m_texCoords.Length; channel++)
+            for (int channel = 0; channel < source.TextureCoordinateChannels.Length; channel++)
             {
                 if (!source.HasTextureCoords(channel))
                 {
                     continue;
                 }
 
-                List<Vector3D> sourceUv = source.TextureCoordinateChannels[channel];
-                var uvs = new NativeArray<float2>(source.m_normals.Count, Allocator.Temp);
+                var sourceUv = source.TextureCoordinateChannels[channel];
+                var uvs = new NativeArray<float2>(length: source.Normals.Count, allocator: Allocator.Temp);
 
-                for (int i = 0; i < source.m_normals.Count; i++)
+                for (int i = 0; i < source.Normals.Count; i++)
                 {
                     Vector3D n = sourceUv[i];
-                    uvs[i] = new float2(n.X, n.Y);
+                    uvs[i] = new float2(x: n.X, y: n.Y);
                 }
 
-                target.SetUVs(channel, uvs);
+                target.SetUVs(channel: channel, uvs: uvs);
             }
         }
     }

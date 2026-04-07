@@ -1,19 +1,18 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Core.Localization;
 using Game.Core.Research;
-using ShapezShifter.SharpDetour;
 using UnityEngine;
 
 namespace ShapezShifter.Flow
 {
-    public class IslandGroupBuilder : IIdentifiableIslandGroupBuilder,
-        IIdentifiableAndTitledIslandGroupBuilder,
-        IIdentifiableTitledAndDescribedIslandGroupBuilder,
-        IIdentifiableAndPresentableIslandGroupBuilder,
-        IIdentifiablePresentableAndCategorizedIslandGroupBuilder,
-        IIslandGroupBuilder
+    public class IslandGroupBuilder
+        : IIdentifiableIslandGroupBuilder,
+          IIdentifiableAndTitledIslandGroupBuilder,
+          IIdentifiableTitledAndDescribedIslandGroupBuilder,
+          IIdentifiableAndPresentableIslandGroupBuilder,
+          IIdentifiablePresentableAndCategorizedIslandGroupBuilder,
+          IIslandGroupBuilder
     {
         internal IslandGroupBuilder(IslandDefinitionGroupId groupId)
         {
@@ -53,7 +52,8 @@ namespace ShapezShifter.Flow
 
         private bool ShouldShowAsReward;
 
-        public IIdentifiableAndPresentableIslandGroupBuilder WithPresentation(IText title,
+        public IIdentifiableAndPresentableIslandGroupBuilder WithPresentation(
+            IText title,
             IText description,
             Sprite icon)
         {
@@ -69,8 +69,7 @@ namespace ShapezShifter.Flow
             return this;
         }
 
-        public IIdentifiableTitledAndDescribedIslandGroupBuilder WithDescription(
-            IText description)
+        public IIdentifiableTitledAndDescribedIslandGroupBuilder WithDescription(IText description)
         {
             Description = description;
             return this;
@@ -98,21 +97,20 @@ namespace ShapezShifter.Flow
             return this;
         }
 
-        public IIdentifiablePresentableAndCategorizedIslandGroupBuilder
-            AsNonTransportableIsland()
+        public IIdentifiablePresentableAndCategorizedIslandGroupBuilder AsNonTransportableIsland()
         {
             IsTransportIsland = false;
             return this;
         }
 
-        public IIslandGroupBuilder WithPreferredPlacement(
-            DefaultPreferredPlacementMode defaultPreferredPlacementMode)
+        public IIslandGroupBuilder WithPreferredPlacement(DefaultPreferredPlacementMode defaultPreferredPlacementMode)
         {
             DefaultPreferredPlacement = defaultPreferredPlacementMode;
             return this;
         }
 
-        public IIslandGroupBuilder WithConfig(bool isTransportIsland,
+        public IIslandGroupBuilder WithConfig(
+            bool isTransportIsland,
             DefaultPreferredPlacementMode defaultPreferredPlacementMode)
         {
             IsTransportIsland = isTransportIsland;
@@ -317,8 +315,7 @@ namespace ShapezShifter.Flow
             throw new NotImplementedException();
         }
 
-        public IIslandGroupBuilder WithPipetteOverride(
-            IslandDefinitionGroupId overrideGroup)
+        public IIslandGroupBuilder WithPipetteOverride(IslandDefinitionGroupId overrideGroup)
         {
             throw new NotImplementedException();
         }
@@ -348,14 +345,18 @@ namespace ShapezShifter.Flow
             throw new NotImplementedException();
         }
 
-
         public IslandDefinitionGroup BuildAndRegister(GameIslands gameIslands)
         {
             IslandDefinitionGroup islandGroup = new(GroupId);
 
-            islandGroup.CustomData.Attach(new GroupPresentationData(Icon, Title, Description, ShouldShowAsReward));
+            islandGroup.CustomData.Attach(
+                new GroupPresentationData(
+                    icon: Icon,
+                    title: Title,
+                    description: Description,
+                    shouldShowAsReward: ShouldShowAsReward));
 
-            gameIslands.Groups.Set(x => x.All, gameIslands.Groups.All.Append(islandGroup));
+            ((List<IIslandDefinitionGroup>)gameIslands.AllDefinitionGroups).Add(islandGroup);
 
             return islandGroup;
         }

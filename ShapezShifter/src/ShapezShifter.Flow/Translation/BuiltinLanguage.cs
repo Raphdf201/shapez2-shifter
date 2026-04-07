@@ -51,7 +51,10 @@ namespace ShapezShifter.Flow
                 BuiltinLanguage.Turkish => "tr",
                 BuiltinLanguage.TraditionalChinese => "zh-Hant",
                 BuiltinLanguage.SimplifiedChinese => "zh-Hans",
-                _ => throw new ArgumentOutOfRangeException(nameof(language), language, null)
+                _ => throw new ArgumentOutOfRangeException(
+                    paramName: nameof(language),
+                    actualValue: language,
+                    message: null)
             };
         }
     }

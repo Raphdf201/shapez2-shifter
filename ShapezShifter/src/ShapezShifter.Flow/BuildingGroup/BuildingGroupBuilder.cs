@@ -6,12 +6,13 @@ using UnityEngine;
 
 namespace ShapezShifter.Flow
 {
-    public class BuildingGroupBuilder : IIdentifiableBuildingGroupBuilder,
-        IIdentifiableAndTitledBuildingGroupBuilder,
-        IIdentifiableTitledAndDescribedBuildingGroupBuilder,
-        IIdentifiableAndPresentableBuildingGroupBuilder,
-        IIdentifiablePresentableAndCategorizedBuildingGroupBuilder,
-        IBuildingGroupBuilder
+    public class BuildingGroupBuilder
+        : IIdentifiableBuildingGroupBuilder,
+          IIdentifiableAndTitledBuildingGroupBuilder,
+          IIdentifiableTitledAndDescribedBuildingGroupBuilder,
+          IIdentifiableAndPresentableBuildingGroupBuilder,
+          IIdentifiablePresentableAndCategorizedBuildingGroupBuilder,
+          IBuildingGroupBuilder
     {
         internal BuildingGroupBuilder(BuildingDefinitionGroupId groupId)
         {
@@ -40,6 +41,7 @@ namespace ShapezShifter.Flow
         private bool RenderConflictIndicatorVisualization;
         private bool RenderConnectorIndicators;
         private bool RenderConflictingConnectorIndicators;
+        private bool ShowNotchIndicators;
         private bool ShowStatBeltProcessingTime;
         private bool ShowStatBuildingsPerFullBelt;
         private bool ShowInSpeedOverview;
@@ -48,9 +50,10 @@ namespace ShapezShifter.Flow
         private WikiEntryId LinkedEntryId;
         private readonly List<Type> PlacementIndicators = new();
         private IEnumerable<IBuildingPlacementRequirement> PlacementRequirements;
-        private MetaBuildingThroughputDisplayHelper ThroughputDisplayHelper;
+        private MetaStructureOverview ThroughputDisplayHelper;
 
-        public IIdentifiableAndPresentableBuildingGroupBuilder WithPresentation(IText title,
+        public IIdentifiableAndPresentableBuildingGroupBuilder WithPresentation(
+            IText title,
             IText description,
             Sprite icon)
         {
@@ -66,8 +69,7 @@ namespace ShapezShifter.Flow
             return this;
         }
 
-        public IIdentifiableTitledAndDescribedBuildingGroupBuilder WithDescription(
-            IText description)
+        public IIdentifiableTitledAndDescribedBuildingGroupBuilder WithDescription(IText description)
         {
             Description = description;
             return this;
@@ -95,21 +97,20 @@ namespace ShapezShifter.Flow
             return this;
         }
 
-        public IIdentifiablePresentableAndCategorizedBuildingGroupBuilder
-            AsNonTransportableBuilding()
+        public IIdentifiablePresentableAndCategorizedBuildingGroupBuilder AsNonTransportableBuilding()
         {
             IsTransportBuilding = false;
             return this;
         }
 
-        public IBuildingGroupBuilder WithPreferredPlacement(
-            DefaultPreferredPlacementMode defaultPreferredPlacementMode)
+        public IBuildingGroupBuilder WithPreferredPlacement(DefaultPreferredPlacementMode defaultPreferredPlacementMode)
         {
             DefaultPreferredPlacement = defaultPreferredPlacementMode;
             return this;
         }
 
-        public IBuildingGroupBuilder WithConfig(bool isTransportBuilding,
+        public IBuildingGroupBuilder WithConfig(
+            bool isTransportBuilding,
             DefaultPreferredPlacementMode defaultPreferredPlacementMode)
         {
             IsTransportBuilding = isTransportBuilding;
@@ -314,8 +315,7 @@ namespace ShapezShifter.Flow
             throw new NotImplementedException();
         }
 
-        public IBuildingGroupBuilder WithPipetteOverride(
-            BuildingDefinitionGroupId overrideGroup)
+        public IBuildingGroupBuilder WithPipetteOverride(BuildingDefinitionGroupId overrideGroup)
         {
             throw new NotImplementedException();
         }
@@ -347,66 +347,62 @@ namespace ShapezShifter.Flow
             throw new NotImplementedException();
         }
 
-        public IBuildingGroupBuilder WithCustomThroughputDisplayHelper(
-            MetaBuildingThroughputDisplayHelper throughputDisplayHelper)
+        public IBuildingGroupBuilder WithCustomStructureOverview(MetaStructureOverview structureOverview)
         {
-            ThroughputDisplayHelper = throughputDisplayHelper;
+            ThroughputDisplayHelper = structureOverview;
             return this;
         }
 
-        public IBuildingGroupBuilder WithDefaultThroughputDisplayHelper()
+        public IBuildingGroupBuilder WithDefaultStructureOverview()
         {
-            return WithCustomThroughputDisplayHelper(new MetaBuildingThroughputDisplayHelper
-            {
-                LockToFirstDefinition = false,
-                MeshSpacing = -0.1f,
-                Slots = Array.Empty<MetaBuildingThroughputDisplayHelper.IOData>()
-            });
+            return WithCustomStructureOverview(
+                new MetaStructureOverview { Slots = Array.Empty<MetaStructureOverview.IOData>() });
         }
 
-        public IBuildingGroupBuilder WithoutThroughputDisplayHelper()
+        public IBuildingGroupBuilder WithoutStructureOverview()
         {
             throw new NotImplementedException();
         }
 
-
         public BuildingDefinitionGroup BuildAndRegister(GameBuildings gameBuildings)
         {
             Debugging.Logger.Info?.Log($"Registering {GroupId} to buildings");
-            BuildingDefinitionGroup buildingGroup = new(GroupId,
-                Icon,
-                Title,
-                Description,
-                IsTransportBuilding,
-                IsRemovable,
-                IsSelectable,
-                IsBuildable,
-                AllowPlaceOnNonFilledTiles,
-                PipetteOverrideId,
-                DefaultPreferredPlacement,
-                AllowPlaceOnNotch,
-                AutoAttractIOScoreMultiplier,
-                AutoConnect,
-                AutoRotateToFitStructures,
-                AllowNonForcingReplacementByOtherBuildings,
-                ShouldSkipReplacementIOChecks,
-                AlwaysProducesConflictIndicators,
-                RenderConflictIndicatorMeshes,
-                RenderConflictIndicatorVisualization,
-                RenderConnectorIndicators,
-                RenderConflictingConnectorIndicators,
-                ShowStatBeltProcessingTime,
-                ShowStatBuildingsPerFullBelt,
-                ShowInSpeedOverview,
-                ShowAsResearchReward,
-                RequireStoreContentId,
-                LinkedEntryId,
-                PlacementIndicators.ToArray() ?? Array.Empty<Type>(),
-                PlacementRequirements ?? Array.Empty<IBuildingPlacementRequirement>(),
-                ThroughputDisplayHelper);
+            BuildingDefinitionGroup buildingGroup = new(
+                id: GroupId,
+                icon: Icon,
+                title: Title,
+                description: Description,
+                isTransportBuilding: IsTransportBuilding,
+                selectable: IsRemovable,
+                playerBuildable: IsSelectable,
+                removable: IsBuildable,
+                allowPlaceOnNonFilledTiles: AllowPlaceOnNonFilledTiles,
+                pipetteOverrideId: PipetteOverrideId,
+                defaultPreferredPlacementMode: DefaultPreferredPlacement,
+                allowPlaceOnNotch: AllowPlaceOnNotch,
+                autoAttractIOScoreMultiplier: AutoAttractIOScoreMultiplier,
+                autoConnect: AutoConnect,
+                autoRotateToFitStructures: AutoRotateToFitStructures,
+                allowNonForcingReplacementByOtherBuildings: AllowNonForcingReplacementByOtherBuildings,
+                shouldSkipReplacementIOChecks: ShouldSkipReplacementIOChecks,
+                alwaysProducesConflictIndicators: AlwaysProducesConflictIndicators,
+                renderConflictIndicatorMeshes: RenderConflictIndicatorMeshes,
+                renderConflictIndicatorVisualization: RenderConflictIndicatorVisualization,
+                renderConnectorIndicators: RenderConnectorIndicators,
+                renderConflictingConnectorIndicators: RenderConflictingConnectorIndicators,
+                showNotchIndicators: ShowNotchIndicators,
+                showStatBeltProcessingTime: ShowStatBeltProcessingTime,
+                showStatBuildingsPerFullBelt: ShowStatBuildingsPerFullBelt,
+                showInSpeedOverview: ShowInSpeedOverview,
+                showAsResearchReward: ShowAsResearchReward,
+                requireStoreContentId: RequireStoreContentId,
+                linkedWikiEntry: LinkedEntryId,
+                placementIndicatorTypes: PlacementIndicators.ToArray() ?? Array.Empty<Type>(),
+                placementRequirements: PlacementRequirements ?? Array.Empty<IBuildingPlacementRequirement>(),
+                structureOverview: ThroughputDisplayHelper);
 
             gameBuildings._All.Add(buildingGroup);
-            gameBuildings._VariantsById.Add(buildingGroup.Id, buildingGroup);
+            gameBuildings._VariantsById.Add(key: buildingGroup.Id, value: buildingGroup);
             return buildingGroup;
         }
 

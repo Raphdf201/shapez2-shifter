@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using Core.Logging;
 using MonoMod.RuntimeDetour;
 using ShapezShifter.SharpDetour;
@@ -16,16 +15,18 @@ namespace ShapezShifter.Hijack
         {
             RewirerProvider = rewirerProvider;
             Logger = logger;
-            IslandsFactoryFromMetadataHook = DetourHelper
-               .CreatePostfixHook<IslandDefinitionFactory, MetaGameModeIslands, GameIslands>((factory, meta) =>
-                        factory.BakeMetadataIntoRuntime(meta),
-                    Postfix);
+            IslandsFactoryFromMetadataHook =
+                DetourHelper.CreatePostfixHook<IslandDefinitionFactory, MetaGameModeIslands, GameIslands>(
+                    original: (factory, meta) => factory.BakeMetadataIntoRuntime(meta),
+                    postfix: Postfix);
         }
 
-        private GameIslands Postfix(IslandDefinitionFactory islandDefinitionFactory, MetaGameModeIslands metaIslands,
+        private GameIslands Postfix(
+            IslandDefinitionFactory islandDefinitionFactory,
+            MetaGameModeIslands metaIslands,
             GameIslands gameIslands)
         {
-            IEnumerable<IIslandsRewirer> islandsRewirers = RewirerProvider.RewirersOfType<IIslandsRewirer>();
+            var islandsRewirers = RewirerProvider.RewirersOfType<IIslandsRewirer>();
 
             Logger.Info?.Log("Intercepting islands creation");
 
@@ -33,7 +34,10 @@ namespace ShapezShifter.Hijack
 
             foreach (IIslandsRewirer islandsRewirer in islandsRewirers)
             {
-                gameIslands = islandsRewirer.ModifyGameIslands(islandDefinitionFactory, metaIslands, gameIslands);
+                gameIslands = islandsRewirer.ModifyGameIslands(
+                    factory: islandDefinitionFactory,
+                    metaIslands: metaIslands,
+                    gameIslands: gameIslands);
             }
 
             Logger.Info?.Log($"New islands: {gameIslands.AllDefinitions.Count} + {islandsCount}");

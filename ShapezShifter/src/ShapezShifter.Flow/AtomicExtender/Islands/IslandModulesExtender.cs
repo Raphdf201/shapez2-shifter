@@ -10,17 +10,18 @@ namespace ShapezShifter.Flow.Atomic
         private readonly IIslandDefinition IslandDefinition;
         private readonly IIslandModulesData Data;
 
-        public IslandModulesExtender(IIslandDefinition buildingDefinition,
-            IIslandModulesData data)
+        public IslandModulesExtender(IIslandDefinition buildingDefinition, IIslandModulesData data)
         {
             IslandDefinition = buildingDefinition;
             Data = data;
         }
 
-        public IEvent AfterHijack => _AfterExtensionApplied;
+        public IEvent AfterHijack
+        {
+            get { return _AfterExtensionApplied; }
+        }
 
-        private readonly MultiRegisterEvent _AfterExtensionApplied =
-            new();
+        private readonly MultiRegisterEvent _AfterExtensionApplied = new();
 
         public void AddModules(IslandsModulesLookup modulesLookup)
         {
@@ -31,7 +32,7 @@ namespace ShapezShifter.Flow.Atomic
                 _ => throw new Exception()
             };
 
-            modulesLookup.AddModuleProvider(IslandDefinition.Id, modules);
+            modulesLookup.AddModuleProvider(definition: IslandDefinition.Id, islandModuleDataProvider: modules);
             _AfterExtensionApplied.Invoke();
         }
     }

@@ -17,14 +17,13 @@ namespace ShapezShifter.Hijack
             RewirerProvider = rewirerProvider;
 
             Hook = DetourHelper.CreateStaticPostfixHook<GameMode, IEnumerable<object>>(
-                typeof(GameModeBuffQueries),
-                mode => GameModeBuffQueries.AllBuffables(mode),
-                Postfix);
+                original: mode => GameModeBuffQueries.AllBuffables(mode),
+                postfix: Postfix);
         }
 
         private IEnumerable<object> Postfix(GameMode mode, IEnumerable<object> buffables)
         {
-            IEnumerable<IBuffablesRewirer> buffablesRewirers = RewirerProvider.RewirersOfType<IBuffablesRewirer>();
+            var buffablesRewirers = RewirerProvider.RewirersOfType<IBuffablesRewirer>();
 
             ICollection<object> buffablesList = buffables.ToList();
             foreach (IBuffablesRewirer rewirer in buffablesRewirers)

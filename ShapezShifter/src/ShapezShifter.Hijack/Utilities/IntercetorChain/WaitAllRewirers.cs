@@ -48,13 +48,18 @@ namespace ShapezShifter.Hijack
             }
         }
 
-        public IEvent AfterHijack => _AfterExtensionApplied;
+        public IEvent AfterHijack
+        {
+            get { return _AfterExtensionApplied; }
+        }
+
         private readonly MultiRegisterEvent _AfterExtensionApplied = new();
     }
 
     public interface IWaitAllRewirers : IChainable
     {
         IWaitAllRewirers And(RewirerChainLink chainableRewirer);
+
         IWaitAllRewirers And<T>(RewirerChainLink<T> chainableRewirer);
     }
 }

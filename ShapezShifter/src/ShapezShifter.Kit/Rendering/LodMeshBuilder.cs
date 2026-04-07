@@ -11,12 +11,8 @@ namespace ShapezShifter.Kit
         }
     }
 
-    public class LodMeshBuilder : IEmptyMeshBuilder,
-        ILodMesh1Builder,
-        ILodMesh2Builder,
-        ILodMesh3Builder,
-        ILodMesh4Builder,
-        ILodMesh5Builder
+    public class LodMeshBuilder
+        : IEmptyMeshBuilder, ILodMesh1Builder, ILodMesh2Builder, ILodMesh3Builder, ILodMesh4Builder, ILodMesh5Builder
     {
         private readonly List<Mesh> Meshes = new();
 
@@ -79,7 +75,6 @@ namespace ShapezShifter.Kit
             return this;
         }
 
-
         public ILodMeshBuilder AddLod5Mesh(Mesh mesh)
         {
             EnsureCapacity(6);
@@ -135,7 +130,6 @@ namespace ShapezShifter.Kit
         LOD6Mesh BuildLod6Mesh();
     }
 
-
     public interface IEmptyMeshBuilder
     {
         ILodMesh1Builder AddLod0Mesh(Mesh mesh);
@@ -144,30 +138,35 @@ namespace ShapezShifter.Kit
     public interface ILodMesh1Builder : ILodMeshBuilder
     {
         ILodMesh2Builder AddLod1Mesh(Mesh mesh);
+
         ILodMesh2Builder UseLod0AsLod1();
     }
 
     public interface ILodMesh2Builder : ILodMeshBuilder
     {
         ILodMesh3Builder AddLod2Mesh(Mesh mesh);
+
         ILodMesh3Builder UseLod1AsLod2();
     }
 
     public interface ILodMesh3Builder : ILodMeshBuilder
     {
         ILodMesh4Builder AddLod3Mesh(Mesh mesh);
+
         ILodMesh4Builder UseLod2AsLod3();
     }
 
     public interface ILodMesh4Builder : ILodMeshBuilder
     {
         ILodMesh5Builder AddLod4Mesh(Mesh mesh);
+
         ILodMesh5Builder UseLod3AsLod4();
     }
 
     public interface ILodMesh5Builder : ILodMeshBuilder
     {
         ILodMeshBuilder AddLod5Mesh(Mesh mesh);
+
         ILodMeshBuilder UseLod4AsLod5();
     }
 }

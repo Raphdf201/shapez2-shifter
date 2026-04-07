@@ -13,14 +13,16 @@ namespace ShapezShifter
         public readonly IViewportLayersController ViewportLayerController;
 
         public BuildingInitiatorsParams(BuildingPlacersCreator placersCreator) : this(
-            placersCreator.Buildings, placersCreator.BuildingsModules,
-            placersCreator.EntityPlacementRunner, placersCreator.TutorialState,
-            placersCreator.PipetteMap, placersCreator.ProgressManager,
-            placersCreator.ViewportLayerController)
-        {
-        }
+            buildings: placersCreator.Buildings,
+            buildingsModules: placersCreator.BuildingsModules,
+            entityPlacementRunner: placersCreator.EntityPlacementRunner,
+            tutorialState: placersCreator.TutorialState,
+            pipetteMap: placersCreator.PipetteMap,
+            progressManager: placersCreator.ProgressManager,
+            viewportLayerController: placersCreator.ViewportLayerController) { }
 
-        private BuildingInitiatorsParams(GameBuildings buildings,
+        private BuildingInitiatorsParams(
+            GameBuildings buildings,
             IBuildingsModulesLookup buildingsModules,
             IEntityPlacementRunner entityPlacementRunner,
             ITutorialStateWriteAccess tutorialState,

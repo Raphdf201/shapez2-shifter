@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using Core.Logging;
 using Game.Core.Rendering.MeshGeneration;
 using Global.Core;
@@ -18,20 +17,21 @@ namespace ShapezShifter.Hijack
         {
             RewirerProvider = rewirerProvider;
             Logger = logger;
-            BuildingsFactoryFromMetadataHook = DetourHelper
-               .CreateStaticPostfixHook<GameModeBuildingsFactory, MetaGameModeBuildings, IMeshCache
-                    ,
-                    VisualThemeBaseResources
-                    , GameBuildings>((factory, meta, meshCache, resources) =>
-                        GameModeBuildingsFactory.FromMetadata(meta, meshCache, resources),
-                    Postfix);
+            BuildingsFactoryFromMetadataHook =
+                DetourHelper
+                   .CreateStaticPostfixHook<MetaGameModeBuildings, IMeshCache, VisualThemeBaseResources, GameBuildings>(
+                        original: (meta, meshCache, resources) =>
+                            GameModeBuildingsFactory.FromMetadata(meta, meshCache, resources),
+                        postfix: Postfix);
         }
 
-        private GameBuildings Postfix(MetaGameModeBuildings metaBuildings,
-            IMeshCache meshCache, VisualThemeBaseResources theme, GameBuildings gameBuildings)
+        private GameBuildings Postfix(
+            MetaGameModeBuildings metaBuildings,
+            IMeshCache meshCache,
+            VisualThemeBaseResources theme,
+            GameBuildings gameBuildings)
         {
-            IEnumerable<IBuildingsRewirer> buildingsRewirers =
-                RewirerProvider.RewirersOfType<IBuildingsRewirer>();
+            var buildingsRewirers = RewirerProvider.RewirersOfType<IBuildingsRewirer>();
 
             Logger.Info?.Log("Intercepting buildings creation");
 
@@ -39,10 +39,14 @@ namespace ShapezShifter.Hijack
 
             foreach (IBuildingsRewirer buildingsRewirer in buildingsRewirers)
             {
-                gameBuildings = buildingsRewirer.ModifyGameBuildings(metaBuildings, gameBuildings, meshCache, theme);
+                gameBuildings = buildingsRewirer.ModifyGameBuildings(
+                    metaBuildings: metaBuildings,
+                    gameBuildings: gameBuildings,
+                    meshCache: meshCache,
+                    theme: theme);
             }
 
-            Logger.Info?.Log($"New buildings: {gameBuildings._All.Count} + {buildingsCount}");
+            Logger.Info?.Log($"New buildings: {gameBuildings.All.Count} + {buildingsCount}");
 
             return gameBuildings;
         }

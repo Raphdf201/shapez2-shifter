@@ -4,7 +4,10 @@ namespace ShapezShifter.Hijack
 {
     public interface IBuildingsRewirer : IRewirer
     {
-        GameBuildings ModifyGameBuildings(MetaGameModeBuildings metaBuildings, GameBuildings gameBuildings,
-            IMeshCache meshCache, VisualThemeBaseResources theme);
+        GameBuildings ModifyGameBuildings(
+            MetaGameModeBuildings metaBuildings,
+            GameBuildings gameBuildings,
+            IMeshCache meshCache,
+            VisualThemeBaseResources theme);
     }
 }

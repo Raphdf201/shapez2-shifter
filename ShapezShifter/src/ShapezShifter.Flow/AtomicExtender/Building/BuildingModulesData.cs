@@ -22,8 +22,5 @@ namespace ShapezShifter.Flow.Atomic
         }
     }
 
-
-    public interface IBuildingModulesData
-    {
-    }
+    public interface IBuildingModulesData { }
 }

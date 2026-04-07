@@ -5,8 +5,7 @@ namespace ShapezShifter.Flow
 {
     public interface IIdentifiableIslandGroupBuilder
     {
-        IIdentifiableAndPresentableIslandGroupBuilder WithPresentation(IText title,
-            IText description, Sprite icon);
+        IIdentifiableAndPresentableIslandGroupBuilder WithPresentation(IText title, IText description, Sprite icon);
 
         IIdentifiableAndTitledIslandGroupBuilder WithTitle(IText title);
     }

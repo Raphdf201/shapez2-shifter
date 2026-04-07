@@ -4,8 +4,7 @@ using ShapezShifter.Hijack;
 
 namespace ShapezShifter.Flow.Atomic
 {
-    public class BuffablesExtender<TBuffableConfig> : IBuffablesRewirer,
-        IChainableRewirer
+    public class BuffablesExtender<TBuffableConfig> : IBuffablesRewirer, IChainableRewirer
     {
         private readonly TBuffableConfig BuffableConfig;
 
@@ -14,11 +13,12 @@ namespace ShapezShifter.Flow.Atomic
             BuffableConfig = buffableConfig;
         }
 
+        public IEvent AfterHijack
+        {
+            get { return _AfterExtensionApplied; }
+        }
 
-        public IEvent AfterHijack => _AfterExtensionApplied;
-
-        private readonly MultiRegisterEvent _AfterExtensionApplied =
-            new();
+        private readonly MultiRegisterEvent _AfterExtensionApplied = new();
 
         public ICollection<object> ModifyBuffables(ICollection<object> buffables)
         {

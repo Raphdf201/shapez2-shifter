@@ -10,8 +10,10 @@ namespace ShapezShifter.Flow.Atomic
         private readonly IBuildingResearchProgressionExtender ProgressionExtender;
         private readonly BuildingDefinitionGroupId GroupId;
 
-        public GameScenarioBuildingExtender(ScenarioSelector scenarioFilter,
-            IBuildingResearchProgressionExtender progressionExtender, BuildingDefinitionGroupId groupId)
+        public GameScenarioBuildingExtender(
+            ScenarioSelector scenarioFilter,
+            IBuildingResearchProgressionExtender progressionExtender,
+            BuildingDefinitionGroupId groupId)
         {
             ScenarioFilter = scenarioFilter;
             ProgressionExtender = progressionExtender;
@@ -25,12 +27,19 @@ namespace ShapezShifter.Flow.Atomic
                 return gameScenario;
             }
 
-            ProgressionExtender.ExtendResearch(gameScenario.UniqueId, gameScenario.Progression, GroupId);
+            ProgressionExtender.ExtendResearch(
+                scenarioId: gameScenario.UniqueId,
+                researchProgression: gameScenario.Progression,
+                groupId: GroupId);
             _AfterExtensionApplied.Invoke();
             return gameScenario;
         }
 
-        public IEvent AfterHijack => _AfterExtensionApplied;
+        public IEvent AfterHijack
+        {
+            get { return _AfterExtensionApplied; }
+        }
+
         private readonly MultiRegisterEvent _AfterExtensionApplied = new();
     }
 }

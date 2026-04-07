@@ -2,15 +2,14 @@ using Game.Core.Simulation;
 
 namespace ShapezShifter.Flow
 {
-    internal class BuildingBuilder :
-        IBuildingBuilder,
-        IIdentifiableBuildingBuilder,
-        IIdentifiableConnectableBuildingBuilder,
-        IIdentifiableConnectableDynamicallyRenderableBuildingBuilder,
-        IIdentifiableConnectableRenderableBuildingBuilder,
-        IIdentifiableConnectableRenderablePredictableBuildingBuilder,
-        IIdentifiableConnectableRenderablePredictableAudibleBuildingBuilder,
-        IIdentifiableConnectableRenderablePredictableAudibleConfigurableBuildingBuilder
+    internal class BuildingBuilder
+        : IBuildingBuilder,
+          IIdentifiableBuildingBuilder,
+          IIdentifiableConnectableBuildingBuilder,
+          IIdentifiableConnectableDynamicallyRenderableBuildingBuilder,
+          IIdentifiableConnectableRenderableBuildingBuilder,
+          IIdentifiableConnectableRenderablePredictableAudibleBuildingBuilder,
+          IIdentifiableConnectableRenderablePredictableAudibleConfigurableBuildingBuilder
     {
         private readonly BuildingDefinitionId DefinitionId;
         private IBuildingConnectorData ConnectorData;
@@ -23,19 +22,17 @@ namespace ShapezShifter.Flow
             DefinitionId = id;
         }
 
-        public IIdentifiableConnectableBuildingBuilder WithConnectorData(
-            IBuildingConnectorData connectorData)
+        public IIdentifiableConnectableBuildingBuilder WithConnectorData(IBuildingConnectorData connectorData)
         {
             ConnectorData = connectorData;
-            BuildingDefinition runtimeDefinition = new(DefinitionId, ConnectorData);
+            BuildingDefinition runtimeDefinition = new(id: DefinitionId, connectorData: ConnectorData);
             runtimeDefinition.CustomData.Attach(ConnectorData);
             BuildingDefinition = runtimeDefinition;
             return this;
         }
 
-        public IIdentifiableConnectableDynamicallyRenderableBuildingBuilder
-            DynamicallyRendering<TRenderer, TSimulation, TDrawData>(
-                TDrawData drawData)
+        public IIdentifiableConnectableDynamicallyRenderableBuildingBuilder DynamicallyRendering<
+            TRenderer, TSimulation, TDrawData>(TDrawData drawData)
             where TRenderer : StatelessBuildingSimulationRenderer<TSimulation, TDrawData>
             where TSimulation : ISimulation
             where TDrawData : IBuildingCustomDrawData
@@ -44,8 +41,7 @@ namespace ShapezShifter.Flow
             return this;
         }
 
-        public IIdentifiableConnectableRenderableBuildingBuilder WithStaticDrawData(
-            BuildingDrawData drawData)
+        public IIdentifiableConnectableRenderableBuildingBuilder WithStaticDrawData(BuildingDrawData drawData)
         {
             BuildingDefinition.CustomData.Attach(drawData);
             return this;
@@ -58,16 +54,13 @@ namespace ShapezShifter.Flow
             return this;
         }
 
-        public IIdentifiableConnectableRenderablePredictableBuildingBuilder WithPrediction(
-            IBuildingOutputPredictor predictor)
+        public IIdentifiableConnectableRenderableBuildingBuilder WithPrediction(ISimulationSystem predictor)
         {
-            BuildingDefinition.CustomData.Attach(predictor);
             return this;
         }
 
-        public IIdentifiableConnectableRenderablePredictableBuildingBuilder WithoutPrediction()
+        public IIdentifiableConnectableRenderableBuildingBuilder WithoutPrediction()
         {
-            BuildingDefinition.CustomData.Attach(new NoOutputPredictor());
             return this;
         }
 
@@ -81,13 +74,15 @@ namespace ShapezShifter.Flow
         public IIdentifiableConnectableRenderablePredictableAudibleBuildingBuilder WithoutSound()
         {
             BuildingDefinition.CustomData.Attach(
-                new BuildingSoundDefinition(SoundLOD.None, SoundPriority.Disabled, null));
+                new BuildingSoundDefinition(
+                    soundLOD: SoundLOD.None,
+                    soundEffectPriority: SoundPriority.Disabled,
+                    customSoundData: null));
             return this;
         }
 
         public IIdentifiableConnectableRenderablePredictableAudibleConfigurableBuildingBuilder
-            WithSimulationConfiguration(
-                ICustomSimulationConfiguration customSimulationConfiguration)
+            WithSimulationConfiguration(ICustomSimulationConfiguration customSimulationConfiguration)
         {
             BuildingDefinition.CustomData.Attach(customSimulationConfiguration);
             return this;
@@ -103,18 +98,22 @@ namespace ShapezShifter.Flow
 
         public IBuildingBuilder WithEfficiencyData(BuildingEfficiencyData buildingEfficiencyData)
         {
-            BuildingEfficiencyData efficiencyData = new(2.0f, 1);
+            BuildingEfficiencyData efficiencyData = new(baseProcessingDuration: 2.0f, processingLaneCount: 1);
             BuildingDefinition.CustomData.Attach(efficiencyData);
             return this;
         }
 
-        public BuildingDefinition BuildAndRegister(BuildingDefinitionGroup group,
-            GameBuildings gameBuildings)
+        public IBuildingBuilder WithoutEfficiencyData()
+        {
+            return this;
+        }
+
+        public BuildingDefinition BuildAndRegister(BuildingDefinitionGroup group, GameBuildings gameBuildings)
         {
             CopyBuildingRenderingFromExisting(gameBuildings);
             BindBuildingToGroup(group);
 
-            gameBuildings._DefinitionsById.Add(BuildingDefinition.Id, BuildingDefinition);
+            gameBuildings._DefinitionsById.Add(key: BuildingDefinition.Id, value: BuildingDefinition);
 
             return BuildingDefinition;
         }
@@ -126,35 +125,34 @@ namespace ShapezShifter.Flow
                 return;
             }
 
-            IBuildingDefinition definitionToCopyFrom = gameBuildings.GetDefinition(DefinitionToCopyFrom.value);
-            IBuildingDrawData drawDataReference = definitionToCopyFrom.CustomData.Get<IBuildingDrawData>();
-            IBuildingCustomDrawData dynamicDrawData = BuildingDefinition.CustomData.Get<IBuildingCustomDrawData>();
+            IBuildingDefinition definitionToCopyFrom = gameBuildings.GetDefinition(DefinitionToCopyFrom.Value);
+            var drawDataReference = definitionToCopyFrom.CustomData.Get<IBuildingDrawData>();
+            var dynamicDrawData = BuildingDefinition.CustomData.Get<IBuildingCustomDrawData>();
             BuildingDrawData drawData = new(
-                drawDataReference.RenderVoidBelow,
-                drawDataReference.MainMeshPerLayer,
-                drawDataReference.IsolatedBlueprintMesh,
-                drawDataReference.CombinedBlueprintMesh,
-                drawDataReference.PreviewMesh,
-                drawDataReference.GlassMesh,
-                drawDataReference.Colliders,
-                dynamicDrawData,
-                drawDataReference.HasCustomOverviewMesh,
-                drawDataReference.CustomOverviewMesh,
-                drawDataReference.SimulationRendererDrawsMainMesh);
+                renderVoidBelow: drawDataReference.RenderVoidBelow,
+                mainMeshPerLayer: drawDataReference.MainMeshPerLayer,
+                isolatedBlueprintMesh: drawDataReference.IsolatedBlueprintMesh,
+                combinedBlueprintMesh: drawDataReference.CombinedBlueprintMesh,
+                previewMesh: drawDataReference.PreviewMesh,
+                glassMesh: drawDataReference.GlassMesh,
+                colliders: drawDataReference.Colliders,
+                customDrawData: dynamicDrawData,
+                hasCustomOverviewMesh: drawDataReference.HasCustomOverviewMesh,
+                customOverviewMesh: drawDataReference.CustomOverviewMesh,
+                simulationRendererDrawsMainMesh: drawDataReference.SimulationRendererDrawsMainMesh);
             BuildingDefinition.CustomData.AttachOrReplace(drawData);
         }
 
-
         private void BindBuildingToGroup(BuildingDefinitionGroup group)
         {
-            EntityPlacementPreferenceData placementPreferenceData = new(group.AutoConnect,
-                group.AutoAttractIOScoreMultiplier);
+            EntityPlacementPreferenceData placementPreferenceData = new(
+                autoSnapToConnectors: group.AutoConnect,
+                connectorsAutoSnapScoreMultiplier: group.AutoAttractIOScoreMultiplier);
 
-            EntityReplacementPreferenceData replacementPreferenceData =
-                new(
-                    group.AllowNonForcingReplacementByOtherBuildings,
-                    group.IsTransportBuilding,
-                    group.ShouldSkipReplacementIOChecks);
+            EntityReplacementPreferenceData replacementPreferenceData = new(
+                allowNonForcingReplacementByEntitiesInDifferentGroup: group.AllowNonForcingReplacementByOtherBuildings,
+                isTransportBuilding: group.IsTransportBuilding,
+                shouldSkipReplacementIOChecks: group.ShouldSkipReplacementIOChecks);
 
             BuildingDefinition.CustomData.AttachOrReplace(group);
             BuildingDefinition.CustomData.AttachOrReplace(placementPreferenceData);
@@ -167,38 +165,28 @@ namespace ShapezShifter.Flow
 
     public interface IIdentifiableBuildingBuilder
     {
-        IIdentifiableConnectableBuildingBuilder WithConnectorData(
-            IBuildingConnectorData connectorData);
+        IIdentifiableConnectableBuildingBuilder WithConnectorData(IBuildingConnectorData connectorData);
     }
 
     public interface IIdentifiableConnectableBuildingBuilder
     {
-        IIdentifiableConnectableDynamicallyRenderableBuildingBuilder
-            DynamicallyRendering<TRenderer, TSimulation, TDrawData>(
-                TDrawData drawData)
+        IIdentifiableConnectableDynamicallyRenderableBuildingBuilder DynamicallyRendering<
+            TRenderer, TSimulation, TDrawData>(TDrawData drawData)
             where TRenderer : StatelessBuildingSimulationRenderer<TSimulation, TDrawData>
             where TSimulation : ISimulation
             where TDrawData : IBuildingCustomDrawData;
+
+        IIdentifiableConnectableRenderableBuildingBuilder WithCopiedStaticDrawData(BuildingDefinitionId definitionId);
     }
 
     public interface IIdentifiableConnectableDynamicallyRenderableBuildingBuilder
     {
-        IIdentifiableConnectableRenderableBuildingBuilder WithStaticDrawData(
-            BuildingDrawData drawData);
+        IIdentifiableConnectableRenderableBuildingBuilder WithStaticDrawData(BuildingDrawData drawData);
 
-        IIdentifiableConnectableRenderableBuildingBuilder WithCopiedStaticDrawData(
-            BuildingDefinitionId definitionId);
+        IIdentifiableConnectableRenderableBuildingBuilder WithCopiedStaticDrawData(BuildingDefinitionId definitionId);
     }
 
     public interface IIdentifiableConnectableRenderableBuildingBuilder
-    {
-        IIdentifiableConnectableRenderablePredictableBuildingBuilder WithPrediction(
-            IBuildingOutputPredictor predictor);
-
-        IIdentifiableConnectableRenderablePredictableBuildingBuilder WithoutPrediction();
-    }
-
-    public interface IIdentifiableConnectableRenderablePredictableBuildingBuilder
     {
         IIdentifiableConnectableRenderablePredictableAudibleBuildingBuilder WithSound(
             BuildingSoundDefinition soundDefinition);
@@ -208,9 +196,8 @@ namespace ShapezShifter.Flow
 
     public interface IIdentifiableConnectableRenderablePredictableAudibleBuildingBuilder
     {
-        IIdentifiableConnectableRenderablePredictableAudibleConfigurableBuildingBuilder
-            WithSimulationConfiguration(
-                ICustomSimulationConfiguration customSimulationConfiguration);
+        IIdentifiableConnectableRenderablePredictableAudibleConfigurableBuildingBuilder WithSimulationConfiguration(
+            ICustomSimulationConfiguration customSimulationConfiguration);
 
         IIdentifiableConnectableRenderablePredictableAudibleConfigurableBuildingBuilder
             WithoutSimulationConfiguration();
@@ -219,5 +206,7 @@ namespace ShapezShifter.Flow
     public interface IIdentifiableConnectableRenderablePredictableAudibleConfigurableBuildingBuilder
     {
         IBuildingBuilder WithEfficiencyData(BuildingEfficiencyData buildingEfficiencyData);
+
+        IBuildingBuilder WithoutEfficiencyData();
     }
 }

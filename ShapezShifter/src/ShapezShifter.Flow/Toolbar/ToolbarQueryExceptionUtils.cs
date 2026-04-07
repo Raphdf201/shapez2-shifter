@@ -8,8 +8,10 @@ namespace ShapezShifter.Flow
 {
     internal static class ToolbarQueryExceptionUtils
     {
-        public static Exception CreateDetailedException(IReadOnlyList<NavigatedToolbarElement> route,
-            Index failedIndex, Exception innerException)
+        public static Exception CreateDetailedException(
+            IReadOnlyList<NavigatedToolbarElement> route,
+            Index failedIndex,
+            Exception innerException)
         {
             StringBuilder messageBuilder = new();
 
@@ -20,7 +22,7 @@ namespace ShapezShifter.Flow
 
             foreach (NavigatedToolbarElement navigationNode in route)
             {
-                Ident(messageBuilder, identLevel++);
+                Ident(stringBuilder: messageBuilder, i: identLevel++);
                 messageBuilder.AppendLine(
                     $"{LogElement(navigationNode.ParentToolbarElement)} ({navigationNode.Index})");
             }
@@ -29,8 +31,8 @@ namespace ShapezShifter.Flow
             if (last is IParentToolbarElementData parentToolbarElementData)
             {
                 messageBuilder.AppendLine($"Failed to navigate to children {failedIndex}. Options were:");
-                foreach (IToolbarElementData child in parentToolbarElementData.Children.Where(x =>
-                             x is not ToolbarSlotSeparator))
+                foreach (IToolbarElementData child in parentToolbarElementData.Children.Where(
+                             x => x is not ToolbarSlotSeparator))
                 {
                     messageBuilder.Append($"{LogElement(child)}\t");
                 }
@@ -42,8 +44,7 @@ namespace ShapezShifter.Flow
                 messageBuilder.AppendLine("Last element is a leaf and query should have stopped before");
             }
 
-
-            return new ToolbarQueryException(messageBuilder.ToString(), innerException);
+            return new ToolbarQueryException(message: messageBuilder.ToString(), innerException: innerException);
 
             string LogElement(IToolbarElementData toolbarElement)
             {

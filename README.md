@@ -1,14 +1,12 @@
+# Shapez shifter
+
 Shapez Shifter is an official mod developed by tobspr, open to community contributions, aimed to facilitate mod creation for shapez 2. Before getting started, check our [example mods](https://github.com/tobspr-games/shapez2-mod-samples) or our [documentation](https://www.notion.so/tobspr-games/Shapez-2-Modding-Documentation-2543c9e752e080a1a772c6b9ada7e462)
-
-
 
 We recommend using and contributing to the Shapez Shifter project for sharing common mod functionality. The API is responsible for:
 
 - Facilitating methods patching
 - Offering an API that sits in-between the shapez 2 source code and the mods. This allows supporting a backwards-compatible API where mods have compatibility with the game for longer and source changes do not immediately break existing mods
 - Offering meaningful methods for adding extra content to the game
-
-
 
 ## 📏 Architecture
 

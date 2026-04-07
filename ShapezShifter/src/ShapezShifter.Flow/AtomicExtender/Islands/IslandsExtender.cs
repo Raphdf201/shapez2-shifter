@@ -7,28 +7,34 @@ namespace ShapezShifter.Flow.Atomic
     {
         private readonly IIslandBuilder IslandBuilder;
         private readonly IIslandGroupBuilder IslandGroupBuilder;
-        public IEvent<IslandDefinition> AfterHijack => _AfterExtensionApplied;
+
+        public IEvent<IslandDefinition> AfterHijack
+        {
+            get { return _AfterExtensionApplied; }
+        }
+
         private readonly MultiRegisterEvent<IslandDefinition> _AfterExtensionApplied = new();
 
-        public IslandsExtender(IIslandBuilder islandBuilder,
-            IIslandGroupBuilder islandGroupBuilder)
+        public IslandsExtender(IIslandBuilder islandBuilder, IIslandGroupBuilder islandGroupBuilder)
         {
             IslandBuilder = islandBuilder;
             IslandGroupBuilder = islandGroupBuilder;
         }
 
-        public GameIslands ModifyGameIslands(IslandDefinitionFactory factory,
-            MetaGameModeIslands metaIslands, GameIslands gameIslands)
+        public GameIslands ModifyGameIslands(
+            IslandDefinitionFactory factory,
+            MetaGameModeIslands metaIslands,
+            GameIslands gameIslands)
         {
             IslandDefinitionGroup islandGroup = IslandGroupBuilder.BuildAndRegister(gameIslands);
-            IslandDefinition island = IslandBuilder.BuildAndRegister(islandGroup, gameIslands);
+            IslandDefinition island = IslandBuilder.BuildAndRegister(group: islandGroup, gameIslands: gameIslands);
 
             IslandDefinitionGroupId groupId = islandGroup.Id;
             string groupName = islandGroup.Id.Name;
 
-            factory.IslandGroupDefinitionFactory.GroupIdToSerialMap.Add(groupId, groupName);
-            factory.IslandGroupDefinitionFactory.GroupSerialToIdMap.Add(groupName, groupId);
-            factory.IslandGroupDefinitionFactory.GroupImplementationMap.Add(groupId, islandGroup);
+            factory.IslandGroupDefinitionFactory.GroupIdToSerialMap.Add(key: groupId, value: groupName);
+            factory.IslandGroupDefinitionFactory.GroupSerialToIdMap.Add(key: groupName, value: groupId);
+            factory.IslandGroupDefinitionFactory.GroupImplementationMap.Add(key: groupId, value: islandGroup);
 
             _AfterExtensionApplied.Invoke(island);
             return gameIslands;

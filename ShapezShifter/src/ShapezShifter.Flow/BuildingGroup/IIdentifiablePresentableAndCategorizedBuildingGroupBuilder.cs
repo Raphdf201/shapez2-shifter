@@ -2,7 +2,6 @@ namespace ShapezShifter.Flow
 {
     public interface IIdentifiablePresentableAndCategorizedBuildingGroupBuilder
     {
-        IBuildingGroupBuilder WithPreferredPlacement(
-            DefaultPreferredPlacementMode defaultPreferredPlacementMode);
+        IBuildingGroupBuilder WithPreferredPlacement(DefaultPreferredPlacementMode defaultPreferredPlacementMode);
     }
 }

@@ -4,8 +4,8 @@ using Unity.Core.Logging;
 
 namespace ShapezShifter.Flow.Atomic
 {
-    public class DefaultIslandPlacementExtender : IPlatformIslandPlacementRewirers,
-        IChainableRewirer<IslandPlacementResult>
+    public class DefaultIslandPlacementExtender
+        : IPlatformIslandPlacementRewirers, IChainableRewirer<IslandPlacementResult>
     {
         private readonly IIslandDefinition IslandDefinition;
 
@@ -14,32 +14,37 @@ namespace ShapezShifter.Flow.Atomic
             IslandDefinition = islandDefinition;
         }
 
-        public IEvent<IslandPlacementResult> AfterHijack => _AfterExtensionApplied;
+        public IEvent<IslandPlacementResult> AfterHijack
+        {
+            get { return _AfterExtensionApplied; }
+        }
+
         private readonly MultiRegisterEvent<IslandPlacementResult> _AfterExtensionApplied = new();
 
-        public void ModifyIslandPlacers(IslandInitiatorsParams islandInitiatorsParams,
+        public void ModifyIslandPlacers(
+            IslandInitiatorsParams islandInitiatorsParams,
             IPlacementInitiatorIdRegistry placementRegistry)
         {
             PlatformIslandsPlacersCreators islandsPlacers = new(
-                islandInitiatorsParams.Buildings,
-                islandInitiatorsParams.Islands,
-                islandInitiatorsParams.MaxBuildingLayer,
-                islandInitiatorsParams.ProgressManager,
-                islandInitiatorsParams.EntityPlacementRunner,
-                islandInitiatorsParams.IslandsModulesLookup,
-                islandInitiatorsParams.PipetteMap,
-                (ITutorialState)islandInitiatorsParams.TutorialState,
-                islandInitiatorsParams.ChunkLimitManager,
-                islandInitiatorsParams.ViewportLayersController,
-                islandInitiatorsParams.RailColorRegistry,
-                new UnityLogger());
+                buildings: islandInitiatorsParams.Buildings,
+                islands: islandInitiatorsParams.Islands,
+                maxBuildingLayer: islandInitiatorsParams.MaxBuildingLayer,
+                progressManager: islandInitiatorsParams.ProgressManager,
+                entityPlacementRunner: islandInitiatorsParams.EntityPlacementRunner,
+                islandsModulesLookup: islandInitiatorsParams.IslandsModulesLookup,
+                pipetteMap: islandInitiatorsParams.PipetteMap,
+                tutorialState: (ITutorialState)islandInitiatorsParams.TutorialState,
+                chunkLimitManager: islandInitiatorsParams.ChunkLimitManager,
+                viewportLayersController: islandInitiatorsParams.ViewportLayersController,
+                railColorRegistry: islandInitiatorsParams.RailColorRegistry,
+                logger: new UnityLogger());
 
             IPlacementInitiator placer = islandsPlacers.CreateDefaultPlacer(IslandDefinition);
 
             PlacementInitiatorId placementInitiatorId = placementRegistry.RegisterInitiator(
-                $"{IslandDefinition.Id.Name}Initiator",
-                placer);
-            IslandPlacementResult result = new(placementInitiatorId, IslandDefinition);
+                serialId: new SerializedPlacerId($"{IslandDefinition.Id.Name}Initiator"),
+                placementInitiator: placer);
+            IslandPlacementResult result = new(initiatorId: placementInitiatorId, island: IslandDefinition);
             _AfterExtensionApplied.Invoke(result);
         }
     }

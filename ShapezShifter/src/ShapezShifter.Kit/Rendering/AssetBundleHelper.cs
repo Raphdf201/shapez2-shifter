@@ -14,7 +14,8 @@ namespace ShapezShifter.Kit
         public static AssetBundleHelper CreateForAssetBundleEmbeddedWithMod<TMod>(string relativePath)
             where TMod : IMod
         {
-            return new AssetBundleHelper(Path.Combine(ModDirectoryLocator.GetDirectoryLocation<TMod>(), relativePath));
+            return new AssetBundleHelper(
+                Path.Combine(path1: ModDirectoryLocator.GetDirectoryLocation<TMod>(), path2: relativePath));
         }
 
         private readonly AssetBundle AssetBundle;

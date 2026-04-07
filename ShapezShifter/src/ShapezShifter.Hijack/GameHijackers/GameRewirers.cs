@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using JetBrains.Annotations;
 
 namespace ShapezShifter.Hijack
@@ -7,7 +8,11 @@ namespace ShapezShifter.Hijack
     [PublicAPI]
     public static class GameRewirers
     {
-        internal static IReadOnlyCollection<IRewirer> Rewirers => RewirersMap.Values;
+        internal static IEnumerable<IRewirer> Rewirers
+        {
+            get { return RewirersMap.Select(x => x.Value); }
+        }
+
         internal static int Version;
 
         private static readonly Dictionary<RewirerHandle, IRewirer> RewirersMap = new();
@@ -17,7 +22,7 @@ namespace ShapezShifter.Hijack
             where TRewirer : IRewirer
         {
             LastHandle = LastHandle.Next();
-            RewirersMap.Add(LastHandle, rewirer);
+            RewirersMap.Add(key: LastHandle, value: rewirer);
             Version++;
             Debugging.Logger.Info?.Log($"Adding rewirer {rewirer.GetType().Name} with handle {LastHandle}");
             return LastHandle;
@@ -25,7 +30,7 @@ namespace ShapezShifter.Hijack
 
         public static void RemoveRewirer(RewirerHandle rewirerHandle)
         {
-            if (!RewirersMap.Remove(rewirerHandle, out IRewirer rewirers))
+            if (!RewirersMap.Remove(key: rewirerHandle, value: out IRewirer rewirers))
             {
                 Debugging.Logger.Error?.Log($"Trying to remove handle that is no longer valid {rewirerHandle}");
                 return;
@@ -37,7 +42,7 @@ namespace ShapezShifter.Hijack
 
         public static void RemoveRewirer<TRewirer>(RewirerHandle rewirerHandle, out TRewirer rewirer)
         {
-            bool removed = RewirersMap.Remove(rewirerHandle, out IRewirer ext);
+            bool removed = RewirersMap.Remove(key: rewirerHandle, value: out IRewirer ext);
             if (!removed)
             {
                 throw new KeyNotFoundException();
@@ -46,7 +51,7 @@ namespace ShapezShifter.Hijack
             Version++;
             if (ext is not TRewirer typedRewirer)
             {
-                RewirersMap.Add(rewirerHandle, ext);
+                RewirersMap.Add(key: rewirerHandle, value: ext);
                 throw new InvalidCastException();
             }
 

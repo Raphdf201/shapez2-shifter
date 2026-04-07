@@ -1,23 +1,25 @@
 using System;
-using System.Diagnostics.CodeAnalysis;
+using Core.Logging;
+using Game.Content.Features.Predictions;
 using Game.Core.Simulation;
-using JetBrains.Annotations;
 using ShapezShifter.Flow.Research;
 using ShapezShifter.Flow.Toolbar;
 using ShapezShifter.Hijack;
 
 namespace ShapezShifter.Flow.Atomic
 {
-    public class AtomicBuildingExtender :
-        IBaseBuildingExtender,
-        IScenarioSelectiveBuildingExtender,
-        IDefinedBuildingExtender,
-        IDefinedPlaceableBuildingExtender,
-        IDefinedPlaceableAccessibleBuildingExtender,
-        IDefinedSimulatableBuildingExtender,
-        IDefinedSimulatablePlaceableBuildingExtender,
-        IAtomicBuildingExtender,
-        IBuildingExtender, IDefinedUnlockableBuildingExtender
+    public class AtomicBuildingExtender
+        : IBaseBuildingExtender,
+          IScenarioSelectiveBuildingExtender,
+          IDefinedBuildingExtender,
+          IDefinedPlaceableBuildingExtender,
+          IDefinedPlaceableAccessibleBuildingExtender,
+          IDefinedSimulatableBuildingExtender,
+          IDefinedSimulatablePlaceableBuildingExtender,
+          IAtomicBuildingExtender,
+          IBuildingExtender,
+          IDefinedUnlockableBuildingExtender,
+          IViewModularBuildingExtender
     {
         // If each interface would have a specialized implementor, these fields could become
         // read-only. However that would create a lot of extra boiler-plate code
@@ -29,6 +31,7 @@ namespace ShapezShifter.Flow.Atomic
         private IBuildingBuilder BuildingBuilder;
         private IBuildingGroupBuilder BuildingGroupBuilder;
         private ISimulationExtender LazySimulationExtender;
+        private ISimulationExtender LazyPredictionExtender;
 
         private IBuildingResearchProgressionExtender ProgressionExtender;
 
@@ -49,14 +52,12 @@ namespace ShapezShifter.Flow.Atomic
             }
         }
 
-        public IDefinedBuildingExtender WithBuilding(IBuildingBuilder building,
-            IBuildingGroupBuilder buildingGroup)
+        public IDefinedBuildingExtender WithBuilding(IBuildingBuilder building, IBuildingGroupBuilder buildingGroup)
         {
             BuildingBuilder = building;
             BuildingGroupBuilder = buildingGroup;
             return this;
         }
-
 
         IDefinedPlaceableAccessibleBuildingExtender IDefinedPlaceableBuildingExtender.InToolbar(
             IToolbarEntryInsertLocation toolbarEntryInsertLocation)
@@ -65,13 +66,14 @@ namespace ShapezShifter.Flow.Atomic
             return this;
         }
 
-
-        public IAtomicBuildingExtender WithSimulation
-            <TSimulation>(IFactoryBuilder<TSimulation> factoryBuilder)
+        public IAtomicBuildingExtender WithSimulation<TSimulation>(
+            IBuildingSimulationFactoryBuilder<TSimulation> buildingSimulationFactoryBuilder,
+            ILogger logger)
             where TSimulation : ISimulation
         {
-            LazySimulationExtender =
-                new TypedSimulationExtender<TSimulation>(factoryBuilder);
+            LazySimulationExtender = new TypedSimulationExtender<TSimulation>(
+                buildingSimulationFactoryBuilder: buildingSimulationFactoryBuilder,
+                logger: logger);
             return this;
         }
 
@@ -80,26 +82,28 @@ namespace ShapezShifter.Flow.Atomic
             return this;
         }
 
-        public IAtomicBuildingExtender WithSimulation
-            <TSimulation, TState, TConfig>(
-                IFactoryBuilder<TSimulation, TState, TConfig> factoryBuilder)
-            where TSimulation : ISimulation where TState : class, ISimulationState, new()
+        public IAtomicBuildingExtender WithSimulation<TSimulation, TState, TConfig>(
+            IBuildingSimulationFactoryBuilder<TSimulation, TState, TConfig> buildingSimulationFactoryBuilder,
+            ILogger logger)
+            where TSimulation : ISimulation
+            where TState : class, ISimulationState, new()
         {
-            LazySimulationExtender =
-                new TypedSimulationExtender<TSimulation, TState, TConfig>(factoryBuilder);
+            LazySimulationExtender = new TypedSimulationExtender<TSimulation, TState, TConfig>(
+                buildingSimulationFactoryBuilder: buildingSimulationFactoryBuilder,
+                logger: logger);
             return this;
         }
 
-        public IAtomicBuildingExtender WithSimulation
-            <TSimulation, TConfig, TBaseConfiguration, TSimulationConfiguration>(
-                IFactoryBuilder<TSimulation, TConfig, TBaseConfiguration> factoryBuilder)
+        public IAtomicBuildingExtender
+            WithSimulation<TSimulation, TConfig, TBaseConfiguration, TSimulationConfiguration>(
+                IBuildingSimulationFactoryBuilder<TSimulation, TConfig, TBaseConfiguration>
+                    buildingSimulationFactoryBuilder,
+                ILogger logger)
         {
             throw new NotImplementedException();
         }
 
-
-        IDefinedSimulatablePlaceableBuildingExtender IDefinedSimulatableBuildingExtender.
-            WithDefaultPlacement()
+        IDefinedSimulatablePlaceableBuildingExtender IDefinedSimulatableBuildingExtender.WithDefaultPlacement()
         {
             return this;
         }
@@ -111,18 +115,19 @@ namespace ShapezShifter.Flow.Atomic
             return this;
         }
 
-        public IBuildingExtender WithAtomicShapeProcessingModules(ResearchSpeedId speedId, float processingDuration)
+        public IViewModularBuildingExtender WithAtomicShapeProcessingModules(
+            ResearchSpeedId speedId,
+            float processingDuration)
         {
-            ModulesData = new BuildingModulesData(speedId, processingDuration);
+            ModulesData = new BuildingModulesData(speedId: speedId, initialProcessingDuration: processingDuration);
             return this;
         }
 
-        public IBuildingExtender WithCustomModules(IBuildingModules buildingModules)
+        public IViewModularBuildingExtender WithCustomModules(IBuildingModules buildingModules)
         {
             ModulesData = new CustomBuildingsModulesData(buildingModules);
             return this;
         }
-
 
         public void Build()
         {
@@ -138,36 +143,36 @@ namespace ShapezShifter.Flow.Atomic
             {
                 // Start the chain of extenders with the scenario extender. This also serves as a filter for only
                 // applying the other extenders if the scenario is part of the filter 
-                RewirerChainLink scenarioRewirer = RewirerChain
-                   .BeginRewiringWith(new GameScenarioBuildingExtender(ScenarioFilter,
-                        ProgressionExtender,
-                        BuildingGroupBuilder.GroupId));
+                RewirerChainLink scenarioRewirer = RewirerChain.BeginRewiringWith(
+                    new GameScenarioBuildingExtender(
+                        scenarioFilter: ScenarioFilter,
+                        progressionExtender: ProgressionExtender,
+                        groupId: BuildingGroupBuilder.GroupId));
 
                 // Then add the building group and building to the game buildings object
-                RewirerChainLink<BuildingDefinition> buildingRewirer =
-                    scenarioRewirer.ThenContinueRewiringWith(BuildBuildingExtender);
+                var buildingRewirer = scenarioRewirer.ThenContinueRewiringWith(BuildBuildingExtender);
 
                 // With the building added, create the simulation
                 RewirerChainLink simulationsRewirer = LazySimulationExtender.ContinueAfter(buildingRewirer);
 
+                RewirerChainLink predictionRewirer = LazyPredictionExtender.ContinueAfter(buildingRewirer);
+
                 // With the building, create the placement
-                RewirerChainLink<BuildingPlacementResult> placementRewirer =
-                    buildingRewirer.ThenContinueRewiringWith(BuildDefaultPlacementExtender);
+                var placementRewirer = buildingRewirer.ThenContinueRewiringWith(BuildDefaultPlacementExtender);
 
                 // And with the placement, create a toolbar entry
-                RewirerChainLink<PlacementToolbarElementData> toolbarRewirer =
+                var toolbarRewirer =
                     placementRewirer.ThenContinueRewiringWith(BuildToolbarExtender(ToolbarEntryInsertLocation));
 
                 // And finally add the modules
-                RewirerChainLink modulesRewirer =
-                    buildingRewirer.ThenContinueRewiringWith(BuildModulesExtender);
+                RewirerChainLink modulesRewirer = buildingRewirer.ThenContinueRewiringWith(BuildModulesExtender);
 
                 // When all extenders are called (noticed that the specific order does not matter), the process is
                 // restarted
-                IWaitAllRewirers allRewirers = AggregatedChain
-                   .WaitFor(simulationsRewirer)
-                   .And(toolbarRewirer)
-                   .And(modulesRewirer);
+                IWaitAllRewirers allRewirers = AggregatedChain.WaitFor(simulationsRewirer)
+                                                              .And(toolbarRewirer)
+                                                              .And(modulesRewirer)
+                                                              .And(predictionRewirer);
                 allRewirers.AfterHijack.Register(OnApplyAllExtenders);
                 return;
 
@@ -181,11 +186,10 @@ namespace ShapezShifter.Flow.Atomic
 
         private BuildingsExtender BuildBuildingExtender()
         {
-            return new BuildingsExtender(BuildingBuilder, BuildingGroupBuilder);
+            return new BuildingsExtender(buildingBuilder: BuildingBuilder, buildingGroupBuilder: BuildingGroupBuilder);
         }
 
-        private DefaultBuildingPlacementExtender BuildDefaultPlacementExtender(
-            BuildingDefinition def)
+        private DefaultBuildingPlacementExtender BuildDefaultPlacementExtender(BuildingDefinition def)
         {
             return new DefaultBuildingPlacementExtender(def);
         }
@@ -195,86 +199,167 @@ namespace ShapezShifter.Flow.Atomic
         {
             return BuildToolbarExtenderFunc;
 
-            ToolbarRewirer BuildToolbarExtenderFunc(
-                BuildingPlacementResult placementResult)
+            ToolbarRewirer BuildToolbarExtenderFunc(BuildingPlacementResult placementResult)
             {
                 PlacementInitiatorId placement = placementResult.InitiatorId;
-                IBuildingDefinitionGroup group = placementResult.Building.CustomData.Get<IBuildingDefinitionGroup>();
+                var group = placementResult.Building.CustomData.Get<IBuildingDefinitionGroup>();
 
-                return new ToolbarRewirer(placement,
-                    group.Title,
-                    group.Description,
-                    group.Icon,
-                    entryInsertLocation);
+                return new ToolbarRewirer(
+                    placement: placement,
+                    title: group.Title,
+                    description: group.Description,
+                    icon: group.Icon,
+                    entryInsertLocation: entryInsertLocation);
             }
         }
 
         private Func<BuildingDefinition, BuildingSimulationExtender<TSimulation, TState, TConfig>>
             BuildSimulationExtender<TSimulation, TState, TConfig>(
-                IFactoryBuilder<TSimulation, TState, TConfig> factoryBuilder)
-            where TSimulation : ISimulation where TState : class, ISimulationState, new()
+                IBuildingSimulationFactoryBuilder<TSimulation, TState, TConfig> buildingSimulationFactoryBuilder,
+                ILogger logger)
+            where TSimulation : ISimulation
+            where TState : class, ISimulationState, new()
         {
             return BuildToolbarExtenderFunc;
 
             BuildingSimulationExtender<TSimulation, TState, TConfig> BuildToolbarExtenderFunc(
                 BuildingDefinition buildingDefinition)
             {
-                return new BuildingSimulationExtender<TSimulation, TState, TConfig>(buildingDefinition.Id,
-                    factoryBuilder);
+                return new BuildingSimulationExtender<TSimulation, TState, TConfig>(
+                    definitionId: buildingDefinition.Id,
+                    buildingSimulationFactoryBuilder: buildingSimulationFactoryBuilder,
+                    logger: logger);
             }
         }
 
-
         private IChainableRewirer BuildModulesExtender(BuildingDefinition buildingDefinition)
         {
-            return new BuildingModulesExtender(buildingDefinition, ModulesData);
+            return new BuildingModulesExtender(buildingDefinition: buildingDefinition, data: ModulesData);
         }
 
         private class TypedSimulationExtender<TSimulation> : ISimulationExtender
             where TSimulation : ISimulation
         {
-            private readonly IFactoryBuilder<TSimulation> FactoryBuilder;
+            private readonly IBuildingSimulationFactoryBuilder<TSimulation> BuildingSimulationFactoryBuilder;
+            private readonly ILogger Logger;
 
             public TypedSimulationExtender(
-                IFactoryBuilder<TSimulation> factoryBuilder)
+                IBuildingSimulationFactoryBuilder<TSimulation> buildingSimulationFactoryBuilder,
+                ILogger logger)
             {
-                FactoryBuilder = factoryBuilder;
+                BuildingSimulationFactoryBuilder = buildingSimulationFactoryBuilder;
+                Logger = logger;
             }
 
             public RewirerChainLink ContinueAfter(RewirerChainLink<BuildingDefinition> rewirerChainLink)
             {
                 return rewirerChainLink.ThenContinueRewiringWith(BuildToolbarExtenderFunc);
 
-                BuildingSimulationExtender<TSimulation> BuildToolbarExtenderFunc(
-                    BuildingDefinition buildingDefinition)
+                BuildingSimulationExtender<TSimulation> BuildToolbarExtenderFunc(BuildingDefinition buildingDefinition)
                 {
-                    return new BuildingSimulationExtender<TSimulation>(buildingDefinition.Id,
-                        FactoryBuilder);
+                    return new BuildingSimulationExtender<TSimulation>(
+                        definitionId: buildingDefinition.Id,
+                        buildingSimulationFactoryBuilder: BuildingSimulationFactoryBuilder,
+                        logger: Logger);
                 }
             }
         }
 
         private class TypedSimulationExtender<TSimulation, TState, TConfig> : ISimulationExtender
-            where TSimulation : ISimulation where TState : class, ISimulationState, new()
+            where TSimulation : ISimulation
+            where TState : class, ISimulationState, new()
 
         {
-            private readonly IFactoryBuilder<TSimulation, TState, TConfig> FactoryBuilder;
+            private readonly IBuildingSimulationFactoryBuilder<TSimulation, TState, TConfig>
+                BuildingSimulationFactoryBuilder;
 
-            public TypedSimulationExtender(IFactoryBuilder<TSimulation, TState, TConfig> factoryBuilder)
+            private readonly ILogger Logger;
+
+            public TypedSimulationExtender(
+                IBuildingSimulationFactoryBuilder<TSimulation, TState, TConfig> buildingSimulationFactoryBuilder,
+                ILogger logger)
             {
-                FactoryBuilder = factoryBuilder;
+                BuildingSimulationFactoryBuilder = buildingSimulationFactoryBuilder;
+                Logger = logger;
             }
 
             public RewirerChainLink ContinueAfter(RewirerChainLink<BuildingDefinition> rewirerChainLink)
             {
                 return rewirerChainLink.ThenContinueRewiringWith(BuildToolbarExtenderFunc)
-                   .ThenContinueRewiringWith(BuildBuffablesExtender);
+                                       .ThenContinueRewiringWith(BuildBuffablesExtender);
 
                 BuildingSimulationExtender<TSimulation, TState, TConfig> BuildToolbarExtenderFunc(
                     BuildingDefinition buildingDefinition)
                 {
-                    return new BuildingSimulationExtender<TSimulation, TState, TConfig>(buildingDefinition.Id,
-                        FactoryBuilder);
+                    return new BuildingSimulationExtender<TSimulation, TState, TConfig>(
+                        definitionId: buildingDefinition.Id,
+                        buildingSimulationFactoryBuilder: BuildingSimulationFactoryBuilder,
+                        logger: Logger);
+                }
+
+                IChainableRewirer BuildBuffablesExtender(TConfig config)
+                {
+                    return new BuffablesExtender<TConfig>(config);
+                }
+            }
+        }
+
+        private class TypedPredictionExtender<TSimulation> : ISimulationExtender
+            where TSimulation : IItemPredictionSimulation
+
+        {
+            private readonly IBuildingPredictionFactoryBuilder<TSimulation> BuildingSimulationFactoryBuilder;
+            private readonly ILogger Logger;
+
+            public TypedPredictionExtender(
+                IBuildingPredictionFactoryBuilder<TSimulation> buildingSimulationFactoryBuilder,
+                ILogger logger)
+            {
+                BuildingSimulationFactoryBuilder = buildingSimulationFactoryBuilder;
+                Logger = logger;
+            }
+
+            public RewirerChainLink ContinueAfter(RewirerChainLink<BuildingDefinition> rewirerChainLink)
+            {
+                return rewirerChainLink.ThenContinueRewiringWith(BuildToolbarExtenderFunc);
+
+                BuildingPredictionExtender<TSimulation> BuildToolbarExtenderFunc(BuildingDefinition buildingDefinition)
+                {
+                    return new BuildingPredictionExtender<TSimulation>(
+                        definitionId: buildingDefinition.Id,
+                        buildingSimulationFactoryBuilder: BuildingSimulationFactoryBuilder,
+                        logger: Logger);
+                }
+            }
+        }
+
+        private class TypedPredictionExtender<TSimulation, TConfig> : ISimulationExtender
+            where TSimulation : IItemPredictionSimulation
+
+        {
+            private readonly IBuildingPredictionFactoryBuilder<TSimulation, TConfig> BuildingSimulationFactoryBuilder;
+            private readonly ILogger Logger;
+
+            public TypedPredictionExtender(
+                IBuildingPredictionFactoryBuilder<TSimulation, TConfig> buildingSimulationFactoryBuilder,
+                ILogger logger)
+            {
+                BuildingSimulationFactoryBuilder = buildingSimulationFactoryBuilder;
+                Logger = logger;
+            }
+
+            public RewirerChainLink ContinueAfter(RewirerChainLink<BuildingDefinition> rewirerChainLink)
+            {
+                return rewirerChainLink.ThenContinueRewiringWith(BuildToolbarExtenderFunc)
+                                       .ThenContinueRewiringWith(BuildBuffablesExtender);
+
+                BuildingPredictionExtender<TSimulation, TConfig> BuildToolbarExtenderFunc(
+                    BuildingDefinition buildingDefinition)
+                {
+                    return new BuildingPredictionExtender<TSimulation, TConfig>(
+                        definitionId: buildingDefinition.Id,
+                        buildingSimulationFactoryBuilder: BuildingSimulationFactoryBuilder,
+                        logger: Logger);
                 }
 
                 IChainableRewirer BuildBuffablesExtender(TConfig config)
@@ -316,8 +401,34 @@ namespace ShapezShifter.Flow.Atomic
             NewSideUpgrade,
             ExistingSideUpgrade
         }
-    }
 
+        public IBuildingExtender WithPrediction<TPrediction>(
+            IBuildingPredictionFactoryBuilder<TPrediction> predictionBuilder,
+            ILogger logger)
+            where TPrediction : IItemPredictionSimulation
+        {
+            LazyPredictionExtender = new TypedPredictionExtender<TPrediction>(
+                buildingSimulationFactoryBuilder: predictionBuilder,
+                logger: logger);
+            return this;
+        }
+
+        public IBuildingExtender WithPrediction<TPrediction, TConfig>(
+            IBuildingPredictionFactoryBuilder<TPrediction, TConfig> predictionBuilder,
+            ILogger logger)
+            where TPrediction : IItemPredictionSimulation
+        {
+            LazyPredictionExtender = new TypedPredictionExtender<TPrediction, TConfig>(
+                buildingSimulationFactoryBuilder: predictionBuilder,
+                logger: logger);
+            return this;
+        }
+
+        public IBuildingExtender WithoutPrediction()
+        {
+            return this;
+        }
+    }
 
     public interface IBaseBuildingExtender
     {
@@ -329,8 +440,7 @@ namespace ShapezShifter.Flow.Atomic
     // Scenario
     public interface IScenarioSelectiveBuildingExtender
     {
-        IDefinedBuildingExtender WithBuilding(IBuildingBuilder building,
-            IBuildingGroupBuilder buildingGroup);
+        IDefinedBuildingExtender WithBuilding(IBuildingBuilder building, IBuildingGroupBuilder buildingGroup);
     }
 
     // Scenario -> Building
@@ -350,38 +460,36 @@ namespace ShapezShifter.Flow.Atomic
     {
         IDefinedPlaceableBuildingExtender WithDefaultPlacement();
 
-        IAtomicBuildingExtender WithSimulation<TSimulation,
-            TState, TConfig>(
-            IFactoryBuilder<TSimulation, TState, TConfig> factoryBuilder)
-            where TSimulation : ISimulation where TState : class, ISimulationState, new();
+        IAtomicBuildingExtender WithSimulation<TSimulation, TState, TConfig>(
+            IBuildingSimulationFactoryBuilder<TSimulation, TState, TConfig> buildingSimulationFactoryBuilder,
+            ILogger logger)
+            where TSimulation : ISimulation
+            where TState : class, ISimulationState, new();
 
-        IAtomicBuildingExtender WithSimulation<
-            TSimulation,
-            TState, TBaseConfiguration, TSimulationConfiguration>(
-            IFactoryBuilder<TSimulation, TState, TBaseConfiguration> factoryBuilder);
+        IAtomicBuildingExtender WithSimulation<TSimulation, TState, TBaseConfiguration, TSimulationConfiguration>(
+            IBuildingSimulationFactoryBuilder<TSimulation, TState, TBaseConfiguration> buildingSimulationFactoryBuilder,
+            ILogger logger);
     }
 
     // Scenario -> Building -> Placement
     public interface IDefinedPlaceableBuildingExtender
     {
-        IDefinedPlaceableAccessibleBuildingExtender InToolbar(
-            IToolbarEntryInsertLocation entryInsertLocation);
+        IDefinedPlaceableAccessibleBuildingExtender InToolbar(IToolbarEntryInsertLocation entryInsertLocation);
     }
 
     // Scenario -> Building -> Placement -> Toolbar
     public interface IDefinedPlaceableAccessibleBuildingExtender
     {
-        IAtomicBuildingExtender WithSimulation<TSimulation,
-            TState, TConfig>(
-            IFactoryBuilder<TSimulation, TState, TConfig> factoryBuilder)
-            where TSimulation : ISimulation where TState : class, ISimulationState, new();
+        IAtomicBuildingExtender WithSimulation<TSimulation, TState, TConfig>(
+            IBuildingSimulationFactoryBuilder<TSimulation, TState, TConfig> buildingSimulationFactoryBuilder,
+            ILogger logger)
+            where TSimulation : ISimulation
+            where TState : class, ISimulationState, new();
 
-        IAtomicBuildingExtender WithSimulation<
-            TSimulation,
-            TState, TBaseConfiguration, TSimulationConfiguration>(
-            IFactoryBuilder<TSimulation, TState, TBaseConfiguration> factoryBuilder);
+        IAtomicBuildingExtender WithSimulation<TSimulation, TState, TBaseConfiguration, TSimulationConfiguration>(
+            IBuildingSimulationFactoryBuilder<TSimulation, TState, TBaseConfiguration> buildingSimulationFactoryBuilder,
+            ILogger logger);
     }
-
 
     // Scenario -> Building -> Simulation -> Buff
     public interface IDefinedSimulatableBuildingExtender
@@ -397,8 +505,26 @@ namespace ShapezShifter.Flow.Atomic
 
     public interface IAtomicBuildingExtender
     {
-        IBuildingExtender WithAtomicShapeProcessingModules(ResearchSpeedId speedId, float processingDuration);
-        IBuildingExtender WithCustomModules(IBuildingModules buildingModules);
+        IViewModularBuildingExtender WithAtomicShapeProcessingModules(
+            ResearchSpeedId speedId,
+            float processingDuration);
+
+        IViewModularBuildingExtender WithCustomModules(IBuildingModules buildingModules);
+    }
+
+    public interface IViewModularBuildingExtender
+    {
+        IBuildingExtender WithPrediction<TPrediction>(
+            IBuildingPredictionFactoryBuilder<TPrediction> predictionBuilder,
+            ILogger logger)
+            where TPrediction : IItemPredictionSimulation;
+
+        IBuildingExtender WithPrediction<TPrediction, TConfig>(
+            IBuildingPredictionFactoryBuilder<TPrediction, TConfig> predictionBuilder,
+            ILogger logger)
+            where TPrediction : IItemPredictionSimulation;
+
+        IBuildingExtender WithoutPrediction();
     }
 
     public interface IBuildingExtender

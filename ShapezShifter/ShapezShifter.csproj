@@ -137,22 +137,22 @@
             <HintPath>$(SPZ2_PATH)\UnityEngine.AssetBundleModule.dll</HintPath>
             <Private>False</Private>
         </Reference>
-    </ItemGroup>
 
-    <PropertyGroup>
-        <PublicizeAll>true</PublicizeAll>
-    </PropertyGroup>
+        <Reference Include="Newtonsoft.Json">
+            <HintPath>$(SPZ2_PATH)\Newtonsoft.Json.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
+    </ItemGroup>
 
     <ItemGroup>
-        <DoNotPublicize Include="System.Collections.Generic:Dictionary" IncludeCompilerGeneratedMembers="false" IncludeVirtualMembers="false"/>
-        <DoNotPublicize Include="SPZGameAssembly:BeltLaneRenderingDefinition" IncludeCompilerGeneratedMembers="false" IncludeVirtualMembers="false"/>
-        <DoNotPublicize Include="Game.Core.Coordinates" IncludeCompilerGeneratedMembers="false" IncludeVirtualMembers="false"/>
-        <DoNotPublicize Include="SPZGameAssembly:BuildingDefinition" IncludeCompilerGeneratedMembers="false" IncludeVirtualMembers="false"/>
+        <Publicize Include="SPZGameAssembly" IncludeVirtualMembers="false"/>
+        <Publicize Include="Core.Localization" IncludeVirtualMembers="false"/>
+        <Publicize Include="Game.Orchestration" IncludeVirtualMembers="false"/>
+        <Publicize Include="Game.Core.Map.Simulation" IncludeVirtualMembers="false"/>
+        <Publicize Include="Game.Core.Rendering" IncludeVirtualMembers="false"/>
         <DoNotPublicize Include="Game.Orchestration:ParentToolbarElementData" IncludeCompilerGeneratedMembers="false" IncludeVirtualMembers="false"/>
         <DoNotPublicize Include="Game.Orchestration:RootToolbarElementData" IncludeCompilerGeneratedMembers="false" IncludeVirtualMembers="false"/>
-
     </ItemGroup>
-
 
     <ItemGroup>
         <None Update="manifest.json">

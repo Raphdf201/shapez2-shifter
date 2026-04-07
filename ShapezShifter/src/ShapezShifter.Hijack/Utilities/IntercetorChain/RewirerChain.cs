@@ -14,7 +14,6 @@ namespace ShapezShifter.Hijack
             }
         }
 
-
         public static RewirerChainLink<TPropagatedData> BeginRewiringWith<TPropagatedData>(
             IChainableRewirer<TPropagatedData> rewirer)
         {
