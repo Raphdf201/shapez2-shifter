@@ -23,5 +23,17 @@ namespace ShapezShifter.Kit
 
             return AssimpToUnityMeshConverter.ConvertStaticMesh(scene.Meshes.Single());
         }
+
+        /// <summary>Loads the first mesh from a GLB file</summary>
+        public static Mesh LoadSingleMeshFromGlb(string file)
+        {
+            return GlbMeshLoader.LoadSingleMesh(file);
+        }
+
+        /// <summary>Loads all meshes from a GLB file.</summary>
+        public static Mesh[] LoadAllMeshesFromGlb(string file)
+        {
+            return GlbMeshLoader.LoadAllMeshes(file);
+        }
     }
 }
